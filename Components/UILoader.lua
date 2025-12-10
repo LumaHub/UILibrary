@@ -7,8 +7,8 @@ local Lighting = game:GetService("Lighting")
 local LocalPlayer = Players.LocalPlayer
 local LumaHub = {}
 
--- Store original ambient color for restoration
-local OriginalAmbient = Lighting.Ambient
+-- Store original ambient color for restoration, checking if Lighting is accessible
+local OriginalAmbient = pcall(function() return Lighting.Ambient end) and Lighting.Ambient or Color3.new(0, 0, 0)
 local AmbientTween
 local AmbientActive = false
 
@@ -49,36 +49,40 @@ local Themes = {
     }
 }
 
--- Dynamic Ambient Effect (New Feature)
+-- Dynamic Ambient Effect (Added pcall for executor compatibility)
 local function StartAmbientEffect(themeColor)
     AmbientActive = true
     spawn(function()
-        while AmbientActive do
-            -- Tween 1: Darken slightly
-            AmbientTween = TweenService:Create(Lighting, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-                Ambient = themeColor:Lerp(Color3.fromRGB(0, 0, 0), 0.7)
-            })
-            AmbientTween:Play()
-            AmbientTween.Completed:Wait()
+        pcall(function() -- Wrap in pcall for environments that block Lighting access
+            while AmbientActive do
+                -- Tween 1: Darken slightly
+                AmbientTween = TweenService:Create(Lighting, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                    Ambient = themeColor:Lerp(Color3.fromRGB(0, 0, 0), 0.7)
+                })
+                AmbientTween:Play()
+                AmbientTween.Completed:Wait()
 
-            -- Tween 2: Return to theme color
-            AmbientTween = TweenService:Create(Lighting, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-                Ambient = themeColor
-            })
-            AmbientTween:Play()
-            AmbientTween.Completed:Wait()
-        end
+                -- Tween 2: Return to theme color
+                AmbientTween = TweenService:Create(Lighting, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                    Ambient = themeColor
+                })
+                AmbientTween:Play()
+                AmbientTween.Completed:Wait()
+            end
+        end)
     end)
 end
 
 local function StopAmbientEffect()
     AmbientActive = false
-    if AmbientTween then AmbientTween:Cancel() end
+    if AmbientTween then pcall(function() AmbientTween:Cancel() end) end
     -- Restore original ambient color smoothly
-    TweenService:Create(Lighting, TweenInfo.new(0.5), {Ambient = OriginalAmbient}):Play()
+    pcall(function()
+        TweenService:Create(Lighting, TweenInfo.new(0.5), {Ambient = OriginalAmbient}):Play()
+    end)
 end
 
--- Notification System Setup (From V4)
+-- Notification System Setup
 local NotificationGui = Instance.new("ScreenGui")
 NotificationGui.Name = "LumaNotifications"
 NotificationGui.DisplayOrder = 100 
@@ -163,19 +167,18 @@ function LumaHub.Notify(Title, Message, Duration, ThemeKey)
     MessageLabel.TextWrapped = true
     MessageLabel.TextTransparency = 1 
 
-    -- Animate In (FIXED)
+    -- Animate In
     local initialPosition = Notification.Position
     Notification.Position = UDim2.new(0, 300, initialPosition.Y.Offset, 0) 
     
     TweenService:Create(Notification, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
         Position = initialPosition,
-        BackgroundTransparency = 0.1
+        BackgroundTransparency = 0.05 -- Use a very low transparency for visibility
     }):Play()
     
     TweenService:Create(TitleLabel, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
     TweenService:Create(MessageLabel, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
     
-    -- Sound Effect: Notification chime
     local NotifSound = Instance.new("Sound")
     NotifSound.SoundId = "rbxassetid://1063273387" 
     NotifSound.Volume = 0.5
@@ -184,7 +187,7 @@ function LumaHub.Notify(Title, Message, Duration, ThemeKey)
 
     task.wait(Duration)
     
-    -- Animate Out (FIXED)
+    -- Animate Out
     TweenService:Create(Notification, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
         Position = UDim2.new(0, 300, initialPosition.Y.Offset, 0),
         BackgroundTransparency = 1
@@ -231,18 +234,17 @@ function LumaHub.Load(Settings)
     end
     
     local Blur = Instance.new("BlurEffect")
-    Blur.Size = 0
-    Blur.Parent = game.Workspace.CurrentCamera
-    
-    -- Start Dynamic Ambient Effect
+    pcall(function() Blur.Size = 0 end) -- Wrap Blur manipulation in pcall
+    pcall(function() Blur.Parent = game.Workspace.CurrentCamera end)
+
     StartAmbientEffect(SelectedTheme.Accent)
 
-    -- Main Background Frame
+    -- Main Background Frame (Set fixed BackgroundColor3 for reliability)
     local MainBackground = Instance.new("Frame")
     MainBackground.Name = "MainBackground"
     MainBackground.Parent = LumaGui
     MainBackground.AnchorPoint = Vector2.new(0.5, 0.5)
-    MainBackground.BackgroundColor3 = SelectedTheme.Main
+    MainBackground.BackgroundColor3 = SelectedTheme.Main -- Use the theme's main color directly
     MainBackground.BorderSizePixel = 0
     MainBackground.Position = UDim2.new(0.5, 0, 0.5, 0)
     MainBackground.Size = UDim2.new(0, 0, 0, 0) 
@@ -396,7 +398,7 @@ function LumaHub.Load(Settings)
         end
     end)
     
-    -- RESTORE: ViewportFrame for Avatar (with Camera Fix)
+    -- ViewportFrame
     local ViewportContainer = Instance.new("Frame")
     ViewportContainer.Parent = ContentContainer
     ViewportContainer.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -448,46 +450,59 @@ function LumaHub.Load(Settings)
     Camera.Parent = AvatarView
     AvatarView.CurrentCamera = Camera
     
-    local ClonedChar, AnimTrack, CameraConn, InitialRotationTween
-    local success = pcall(function()
-        local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-        Character.Archivable = true
-        ClonedChar = Character:Clone()
-        ClonedChar.Parent = WorldModel
-        
-        local RootPart = ClonedChar:WaitForChild("HumanoidRootPart")
-        RootPart.Anchored = true
-        ClonedChar:SetPrimaryPartCFrame(CFrame.new(0, 0, 0))
-        
-        local Humanoid = ClonedChar:WaitForChild("Humanoid")
-        local Animator = Humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator", Humanoid)
-        
-        -- Use a standard Idle animation for reliability
-        local Animation = Instance.new("Animation")
-        Animation.AnimationId = "rbxassetid://3695333486" -- Basic Idle
-        
-        AnimTrack = Animator:LoadAnimation(Animation)
-        if AnimTrack then 
-            AnimTrack.Looped = true
-            AnimTrack:Play()
-        end
-        
-        Camera.CFrame = CFrame.new(Vector3.new(0, 1.5, -5), RootPart.Position + Vector3.new(0, 1, 0))
-        
-        -- Initial 360 rotation (New Feature)
-        InitialRotationTween = TweenService:Create(RootPart, TweenInfo.new(1.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-            CFrame = RootPart.CFrame * CFrame.Angles(0, math.rad(360), 0)
-        })
-        InitialRotationTween:Play()
-        
-        local CameraTime = 0
-        CameraConn = RunService.RenderStepped:Connect(function(dt)
-            if ClonedChar and ClonedChar.PrimaryPart then
-                CameraTime = CameraTime + dt
-                local Offset = math.sin(CameraTime * 0.5) * 0.3
-                Camera.CFrame = CFrame.new(Vector3.new(Offset, 1.5 + math.sin(CameraTime) * 0.2, -5), RootPart.Position + Vector3.new(0, 1, 0))
+    local ClonedChar, AnimTrack, CameraConn
+    
+    -- IMPROVED: Robust ViewportFrame Character Loading
+    spawn(function()
+        local success, char = pcall(function()
+            -- Wait longer for the character to ensure it's loaded
+            local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+            local success, clone = pcall(function() return character:Clone() end)
+            if success then
+                return clone
+            else
+                return nil
             end
         end)
+
+        if success and char and char:FindFirstChild("HumanoidRootPart") then
+            ClonedChar = char
+            ClonedChar.Parent = WorldModel
+            
+            local RootPart = ClonedChar:WaitForChild("HumanoidRootPart")
+            RootPart.Anchored = true
+            ClonedChar:SetPrimaryPartCFrame(CFrame.new(0, 0, 0))
+            
+            local Humanoid = ClonedChar:WaitForChild("Humanoid")
+            local Animator = Humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator", Humanoid)
+            
+            local Animation = Instance.new("Animation")
+            Animation.AnimationId = "rbxassetid://3695333486" 
+            
+            pcall(function()
+                AnimTrack = Animator:LoadAnimation(Animation)
+                if AnimTrack then 
+                    AnimTrack.Looped = true
+                    AnimTrack:Play()
+                end
+            end)
+            
+            Camera.CFrame = CFrame.new(Vector3.new(0, 1.5, -5), RootPart.Position + Vector3.new(0, 1, 0))
+            
+            -- Initial 360 rotation (Guaranteed to run once the character is ready)
+            TweenService:Create(RootPart, TweenInfo.new(1.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                CFrame = RootPart.CFrame * CFrame.Angles(0, math.rad(360), 0)
+            }):Play()
+            
+            local CameraTime = 0
+            CameraConn = RunService.RenderStepped:Connect(function(dt)
+                if ClonedChar and ClonedChar.PrimaryPart then
+                    CameraTime = CameraTime + dt
+                    local Offset = math.sin(CameraTime * 0.5) * 0.3
+                    Camera.CFrame = CFrame.new(Vector3.new(Offset, 1.5 + math.sin(CameraTime) * 0.2, -5), RootPart.Position + Vector3.new(0, 1, 0))
+                end
+            end)
+        end
     end)
     
     -- Info Labels
@@ -567,19 +582,19 @@ function LumaHub.Load(Settings)
         end
     end
     
-    -- Sound Effect: UI Open Chime (New Asset)
+    -- Sound Effect: UI Open Chime
     local OpenSound = Instance.new("Sound")
-    OpenSound.SoundId = "rbxassetid://600200877" -- Example: UI Click/Open
+    OpenSound.SoundId = "rbxassetid://600200877" 
     OpenSound.Volume = 0.5 
     OpenSound.Parent = LumaGui
     pcall(function() OpenSound:Play() end)
     
     -- 1. INITIAL OPENING TWEEN (SMOOTH SIZE AND FADE)
-    TweenService:Create(Blur, TweenInfo.new(0.5), {Size = 15}):Play()
+    pcall(function() TweenService:Create(Blur, TweenInfo.new(0.5), {Size = 15}):Play() end)
     
     local OpenTween = TweenService:Create(MainBackground, TweenInfo.new(0.8, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 520, 0, 280),
-        BackgroundTransparency = 0.1 
+        BackgroundTransparency = 0 -- Fade to fully visible background color
     })
     OpenTween:Play()
     
@@ -620,7 +635,6 @@ function LumaHub.Load(Settings)
     TweenService:Create(LoadingFill, TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {Size = UDim2.new(0.35, 0, 1, 0)}):Play()
     task.wait(1.2)
     
-    -- Sound Effect: Stage Complete
     local StageSound = Instance.new("Sound")
     StageSound.SoundId = "rbxassetid://1063273387" 
     StageSound.Volume = 0.4
@@ -641,38 +655,35 @@ function LumaHub.Load(Settings)
     StatusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
     TweenService:Create(LoadingFill, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)}):Play()
 
-    -- Sound Effect: Ready Chime
     local ReadySound = Instance.new("Sound")
-    ReadySound.SoundId = "rbxassetid://4488899884" -- Example: Success/Level Up Chime
+    ReadySound.SoundId = "rbxassetid://4488899884" 
     ReadySound.Volume = 0.8
     ReadySound.Parent = LumaGui
     pcall(function() ReadySound:Play() end)
 
-    -- Show Notification upon load complete
     LumaHub.Notify("LumaHub Loaded", "Welcome, " .. LocalPlayer.DisplayName .. "! Core UI Initialized.", 4, Settings.Theme or "Dark")
 
     task.wait(0.8)
     
     -- 4. CLOSING TWEEN (PROFESSIONAL FADE OUT)
-    StopAmbientEffect() -- Restore Lighting Ambient
-    TweenService:Create(Blur, TweenInfo.new(0.6), {Size = 0}):Play()
+    StopAmbientEffect() 
+    pcall(function() TweenService:Create(Blur, TweenInfo.new(0.6), {Size = 0}):Play() end)
     
     -- Fade out all content completely first
-    local CloseFadeInfo = TweenInfo.new(0.5, Enum.EasingStyle.Linear)
+    local CloseFadeInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quart)
     
     TweenService:Create(ContentContainer, CloseFadeInfo, {BackgroundTransparency = 1}):Play()
     TweenService:Create(MainBackground, CloseFadeInfo, {BackgroundTransparency = 1}):Play()
     TweenService:Create(MainStroke, CloseFadeInfo, {Transparency = 1}):Play()
     TweenService:Create(GlowFrame, CloseFadeInfo, {BackgroundTransparency = 1}):Play()
     
-    -- Sound Effect: UI Close
     local CloseSound = Instance.new("Sound")
-    CloseSound.SoundId = "rbxassetid://600201103" -- Example: UI Close/Deselect
+    CloseSound.SoundId = "rbxassetid://600201103" 
     CloseSound.Volume = 0.5 
     CloseSound.Parent = LumaGui
     pcall(function() CloseSound:Play() end)
     
-    task.wait(0.5) -- Wait for fade
+    task.wait(0.5) 
     
     -- Then shrink the main frame (smooth transition)
     local CloseTween = TweenService:Create(MainBackground, TweenInfo.new(0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)})
@@ -685,11 +696,10 @@ function LumaHub.Load(Settings)
     borderActive = false
     particlesActive = false
     
-    if CameraConn then CameraConn:Disconnect() end
-    if AnimTrack then AnimTrack:Stop() end
+    if CameraConn then pcall(function() CameraConn:Disconnect() end) end
+    if AnimTrack then pcall(function() AnimTrack:Stop() end) end
     
-    -- Destroy everything
-    Blur:Destroy()
+    pcall(function() Blur:Destroy() end)
     LumaGui:Destroy()
     
     return LumaHub 
