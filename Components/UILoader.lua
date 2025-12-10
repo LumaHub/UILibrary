@@ -5,6 +5,15 @@ local CoreGui = game:GetService("CoreGui")
 
 local LocalPlayer = Players.LocalPlayer
 
+-- Helper function to clamp RGB values
+local function ClampColor(color, multiplier)
+	return Color3.new(
+		math.min(color.R * multiplier, 1),
+		math.min(color.G * multiplier, 1),
+		math.min(color.B * multiplier, 1)
+	)
+end
+
 local Themes = {
 	Crimson = {
 		Main = Color3.fromRGB(20, 20, 20),
@@ -90,16 +99,12 @@ local function Load(Settings)
 	MainStroke.Color = SelectedTheme.Stroke
 	MainStroke.Transparency = 1
 	
-	-- Animated gradient
+	-- Animated gradient (FIXED)
 	local BackgroundGradient = Instance.new("UIGradient")
 	BackgroundGradient.Rotation = 45
 	BackgroundGradient.Color = ColorSequence.new({
 		ColorSequenceKeypoint.new(0, SelectedTheme.Main),
-		ColorSequenceKeypoint.new(0.5, Color3.new(
-			math.min(SelectedTheme.Main.R * 1.3, 1),
-			math.min(SelectedTheme.Main.G * 1.3, 1),
-			math.min(SelectedTheme.Main.B * 1.3, 1)
-		)),
+		ColorSequenceKeypoint.new(0.5, ClampColor(SelectedTheme.Main, 1.3)),
 		ColorSequenceKeypoint.new(1, SelectedTheme.Main)
 	})
 	BackgroundGradient.Parent = MainBackground
@@ -210,15 +215,11 @@ local function Load(Settings)
 	FillCorner.CornerRadius = UDim.new(1, 0)
 	FillCorner.Parent = LoadingFill
 	
-	-- Gradient on loading bar
+	-- Gradient on loading bar (FIXED)
 	local FillGradient = Instance.new("UIGradient")
 	FillGradient.Color = ColorSequence.new({
 		ColorSequenceKeypoint.new(0, SelectedTheme.Accent),
-		ColorSequenceKeypoint.new(0.5, Color3.new(
-			math.min(SelectedTheme.Accent.R * 1.5, 1),
-			math.min(SelectedTheme.Accent.G * 1.5, 1),
-			math.min(SelectedTheme.Accent.B * 1.5, 1)
-		)),
+		ColorSequenceKeypoint.new(0.5, ClampColor(SelectedTheme.Accent, 1.2)),
 		ColorSequenceKeypoint.new(1, SelectedTheme.Accent)
 	})
 	FillGradient.Parent = LoadingFill
