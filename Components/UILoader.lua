@@ -27,7 +27,7 @@ local Themes = {
         Text = Color3.fromRGB(255, 240, 255),
         Glow = Color3.fromRGB(255, 150, 200)
     },
-    Dark = {
+    Dark = { -- Default Theme
         Main = Color3.fromRGB(10, 10, 10),
         Accent = Color3.fromRGB(100, 100, 100),
         Stroke = Color3.fromRGB(40, 40, 40),
@@ -43,9 +43,114 @@ local Themes = {
     }
 }
 
+-- Notification System Setup (New Section)
+local NotificationGui = Instance.new("ScreenGui")
+NotificationGui.Name = "LumaNotifications"
+NotificationGui.DisplayOrder = 100 -- Ensure it's on top
+NotificationGui.IgnoreGuiInset = true
+
+if gethui then
+    NotificationGui.Parent = gethui()
+elseif syn and syn.protect_gui then 
+    syn.protect_gui(NotificationGui)
+    NotificationGui.Parent = CoreGui
+else
+    NotificationGui.Parent = CoreGui
+end
+
+local NotifContainer = Instance.new("Frame")
+NotifContainer.Name = "Container"
+NotifContainer.Parent = NotificationGui
+NotifContainer.AnchorPoint = Vector2.new(1, 0)
+NotifContainer.BackgroundTransparency = 1
+NotifContainer.Position = UDim2.new(1, -20, 0, 20)
+NotifContainer.Size = UDim2.new(0, 250, 0, 0) -- Height is dynamically set
+
+function LumaHub.Notify(Title, Message, Duration, ThemeKey)
+    local Theme = Themes[ThemeKey] or Themes.Dark
+    Duration = Duration or 5
+    
+    local Notification = Instance.new("Frame")
+    Notification.Name = "Notification"
+    Notification.Parent = NotifContainer
+    Notification.AnchorPoint = Vector2.new(0, 1)
+    Notification.BackgroundColor3 = Theme.Main
+    Notification.BorderSizePixel = 0
+    Notification.Position = UDim2.new(0, 0, 0, 0)
+    Notification.Size = UDim2.new(1, 0, 0, 80)
+    Notification.BackgroundTransparency = 0.1
+    
+    -- Insert new notification at the top
+    for _, item in pairs(NotifContainer:GetChildren()) do
+        if item:IsA("Frame") and item.Name == "Notification" and item ~= Notification then
+            TweenService:Create(item, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Position = item.Position + UDim2.new(0, 0, 0, 90)}):Play()
+        end
+    end
+
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 8)
+    Corner.Parent = Notification
+
+    local Stroke = Instance.new("UIStroke")
+    Stroke.Parent = Notification
+    Stroke.Thickness = 2
+    Stroke.Color = Theme.Stroke
+    Stroke.Transparency = 0.5
+    
+    local AccentBar = Instance.new("Frame")
+    AccentBar.Parent = Notification
+    AccentBar.BackgroundColor3 = Theme.Accent
+    AccentBar.BorderSizePixel = 0
+    AccentBar.Position = UDim2.new(0, 0, 0, 0)
+    AccentBar.Size = UDim2.new(0, 5, 1, 0)
+
+    local TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Parent = Notification
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Font = Enum.Font.GothamBold
+    TitleLabel.Text = Title
+    TitleLabel.TextColor3 = Theme.Text
+    TitleLabel.TextSize = 16
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TitleLabel.Position = UDim2.new(0, 15, 0, 8)
+    TitleLabel.Size = UDim2.new(1, -20, 0.4, 0)
+
+    local MessageLabel = Instance.new("TextLabel")
+    MessageLabel.Parent = Notification
+    MessageLabel.BackgroundTransparency = 1
+    MessageLabel.Font = Enum.Font.Gotham
+    MessageLabel.Text = Message
+    MessageLabel.TextColor3 = BrightenColor(Theme.Text, 0.2)
+    MessageLabel.TextSize = 13
+    MessageLabel.TextXAlignment = Enum.TextXAlignment.Left
+    MessageLabel.Position = UDim2.new(0, 15, 0.4, 0)
+    MessageLabel.Size = UDim2.new(1, -20, 0.5, 0)
+    MessageLabel.TextWrapped = true
+
+    -- Animate In
+    Notification.Position = UDim2.new(0, 300, 0, 0)
+    TweenService:Create(Notification, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, 0)}):Play()
+    
+    -- Animate Out
+    task.wait(Duration)
+    TweenService:Create(Notification, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Position = UDim2.new(0, 300, 0, 0)}):Play()
+    
+    task.wait(0.5)
+    Notification:Destroy()
+
+    -- Adjust container size after destruction
+    for _, item in pairs(NotifContainer:GetChildren()) do
+        if item:IsA("Frame") and item.Name == "Notification" then
+            TweenService:Create(item, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Position = item.Position - UDim2.new(0, 0, 0, 90)}):Play()
+        end
+    end
+end
+-- End Notification System Setup
+
 function LumaHub.Load(Settings)
     Settings = Settings or {}
-    local SelectedTheme = Themes[Settings.Theme] or Themes.Blossom
+    -- Default theme changed to Dark
+    local SelectedTheme = Themes[Settings.Theme] or Themes.Dark
     local TitleText = Settings.Title or "LumaHub"
     
     local ExecutorName = "Unknown"
@@ -61,7 +166,7 @@ function LumaHub.Load(Settings)
     LumaGui.IgnoreGuiInset = true
     LumaGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     
-    -- Robust parenting for executors (CoreGui/Hidden UI)
+    -- Robust parenting for executors
     if gethui then
         LumaGui.Parent = gethui()
     elseif syn and syn.protect_gui then 
@@ -78,6 +183,7 @@ function LumaHub.Load(Settings)
     
     -- Main Background
     local MainBackground = Instance.new("Frame")
+    -- ... (MainBackground creation code, unchanged) ...
     MainBackground.Name = "MainBackground"
     MainBackground.Parent = LumaGui
     MainBackground.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -121,6 +227,7 @@ function LumaHub.Load(Settings)
     
     -- Glow effect
     local GlowFrame = Instance.new("Frame")
+    -- ... (GlowFrame creation code, unchanged) ...
     GlowFrame.Name = "Glow"
     GlowFrame.Parent = MainBackground
     GlowFrame.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -136,6 +243,7 @@ function LumaHub.Load(Settings)
     GlowCorner.Parent = GlowFrame
     
     local ContentContainer = Instance.new("Frame")
+    -- ... (ContentContainer creation code, unchanged) ...
     ContentContainer.Name = "Content"
     ContentContainer.Parent = MainBackground
     ContentContainer.BackgroundTransparency = 1
@@ -145,6 +253,7 @@ function LumaHub.Load(Settings)
     
     -- Title with shadow
     local TitleShadow = Instance.new("TextLabel")
+    -- ... (TitleShadow creation code, unchanged) ...
     TitleShadow.Parent = ContentContainer
     TitleShadow.BackgroundTransparency = 1
     TitleShadow.Position = UDim2.new(0.052, 0, 0.082, 0)
@@ -158,6 +267,7 @@ function LumaHub.Load(Settings)
     TitleShadow.ZIndex = 1
     
     local TitleLabel = Instance.new("TextLabel")
+    -- ... (TitleLabel creation code, unchanged) ...
     TitleLabel.Parent = ContentContainer
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.Position = UDim2.new(0.05, 0, 0.08, 0)
@@ -172,6 +282,7 @@ function LumaHub.Load(Settings)
     
     -- Glowing text effect
     local TitleGlow = Instance.new("TextLabel")
+    -- ... (TitleGlow creation code, unchanged) ...
     TitleGlow.Parent = ContentContainer
     TitleGlow.BackgroundTransparency = 1
     TitleGlow.Position = UDim2.new(0.05, 0, 0.08, 0)
@@ -186,6 +297,7 @@ function LumaHub.Load(Settings)
     
     -- Animated loading bar
     local LoadingBarContainer = Instance.new("Frame")
+    -- ... (LoadingBarContainer creation code, unchanged) ...
     LoadingBarContainer.Parent = ContentContainer
     LoadingBarContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     LoadingBarContainer.BorderSizePixel = 0
@@ -204,6 +316,7 @@ function LumaHub.Load(Settings)
     BarStroke.Transparency = 1
     
     local LoadingFill = Instance.new("Frame")
+    -- ... (LoadingFill creation code, unchanged) ...
     LoadingFill.Parent = LoadingBarContainer
     LoadingFill.BackgroundColor3 = SelectedTheme.Accent
     LoadingFill.BorderSizePixel = 0
@@ -241,6 +354,7 @@ function LumaHub.Load(Settings)
     
     -- Viewport with better styling
     local ViewportContainer = Instance.new("Frame")
+    -- ... (ViewportContainer creation code, unchanged) ...
     ViewportContainer.Parent = ContentContainer
     ViewportContainer.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     ViewportContainer.BackgroundTransparency = 0.9
@@ -305,10 +419,10 @@ function LumaHub.Load(Settings)
         ClonedChar:SetPrimaryPartCFrame(CFrame.new(0, 0, 0))
         
         local AnimationIds = {
-            "rbxassetid://3333499508", 
-            "rbxassetid://3695333486", 
-            "rbxassetid://4265725525", 
-            "rbxassetid://3361276673"
+            "rbxassetid://3333499508", -- Dance
+            "rbxassetid://3695333486", -- Idle
+            "rbxassetid://4265725525", -- Sit
+            "rbxassetid://3361276673"  -- Another Idle
         }
         
         local Humanoid = ClonedChar:WaitForChild("Humanoid")
@@ -317,9 +431,12 @@ function LumaHub.Load(Settings)
         local Animation = Instance.new("Animation")
         Animation.AnimationId = AnimationIds[math.random(1, #AnimationIds)]
         
+        -- FIX: Use the Animator to load the animation
         AnimTrack = Animator:LoadAnimation(Animation)
-        AnimTrack.Looped = true
-        AnimTrack:Play()
+        if AnimTrack then -- Check if loading was successful
+            AnimTrack.Looped = true
+            AnimTrack:Play()
+        end
         
         Camera.CFrame = CFrame.new(Vector3.new(0, 1.5, -5), RootPart.Position + Vector3.new(0, 1, 0))
         
@@ -327,6 +444,7 @@ function LumaHub.Load(Settings)
         CameraConn = RunService.RenderStepped:Connect(function(dt)
             if ClonedChar and ClonedChar.PrimaryPart then
                 CameraTime = CameraTime + dt
+                -- Dynamic movement for the camera
                 local Offset = math.sin(CameraTime * 0.5) * 0.3
                 Camera.CFrame = CFrame.new(Vector3.new(Offset, 1.5 + math.sin(CameraTime) * 0.2, -5), RootPart.Position + Vector3.new(0, 1, 0))
             end
@@ -334,12 +452,14 @@ function LumaHub.Load(Settings)
     end)
     
     local InfoFrame = Instance.new("Frame")
+    -- ... (InfoFrame creation code, unchanged) ...
     InfoFrame.Parent = ContentContainer
     InfoFrame.BackgroundTransparency = 1
     InfoFrame.Position = UDim2.new(0.35, 0, 0.22, 0)
     InfoFrame.Size = UDim2.new(0.6, 0, 0.55, 0)
     
     local function CreateInfoLabel(Text, Order)
+        -- ... (CreateInfoLabel function code, unchanged) ...
         local Container = Instance.new("Frame")
         Container.Parent = InfoFrame
         Container.BackgroundTransparency = 1
@@ -384,6 +504,7 @@ function LumaHub.Load(Settings)
     
     local particlesActive = true
     local function CreateParticles()
+        -- ... (CreateParticles function code, unchanged) ...
         for i = 1, 15 do
             local Particle = Instance.new("Frame")
             Particle.Parent = MainBackground
@@ -408,13 +529,14 @@ function LumaHub.Load(Settings)
         end
     end
     
-    local LoadSound = Instance.new("Sound")
-    LoadSound.SoundId = "rbxassetid://6895079853"
-    LoadSound.Volume = 0.5
-    LoadSound.Parent = LumaGui
+    -- Sound Effect: Start Chime (soft)
+    local StartSound = Instance.new("Sound")
+    StartSound.SoundId = "rbxassetid://6895079853"
+    StartSound.Volume = 0.3 
+    StartSound.Parent = LumaGui
     
     pcall(function()
-        LoadSound:Play()
+        StartSound:Play()
     end)
     
     -- Start animations
@@ -464,6 +586,20 @@ function LumaHub.Load(Settings)
     StatusLabel.Text = "STATUS: Ready!"
     StatusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
     TweenService:Create(LoadingFill, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)}):Play()
+
+    -- Sound Effect: Ready Chime
+    local ReadySound = Instance.new("Sound")
+    ReadySound.SoundId = "rbxassetid://1063273387" -- Example: short success chime
+    ReadySound.Volume = 0.8
+    ReadySound.Parent = LumaGui
+
+    pcall(function()
+        ReadySound:Play()
+    end)
+
+    -- Show Notification upon load complete
+    LumaHub.Notify("LumaHub Loaded", "Welcome, " .. LocalPlayer.DisplayName .. "! Core functions initialized.", 4, Settings.Theme or "Dark")
+
     task.wait(0.8)
     
     -- Close with blur fade
@@ -487,5 +623,5 @@ function LumaHub.Load(Settings)
     return true
 end
 
--- FIX: Return the LumaHub TABLE so the execution script can correctly index it with .Load
+-- Return the LumaHub TABLE (contains Load and Notify)
 return LumaHub
