@@ -1,73 +1,84 @@
+-- SERVICES
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Lighting = game:GetService("Lighting")
+local UserInputService = game:GetService("UserInputService")
 
 local LocalPlayer = Players.LocalPlayer
 local LumaHub = {}
 
--- Store original ambient color for restoration, checking if Lighting is accessible
+-- CONFIGURATION CONSTANTS
+local UI_SIZE = UDim2.fromOffset(800, 550)
+local SIDEBAR_WIDTH = 180
+local LOADER_SIZE = UDim2.fromOffset(520, 280)
+local TOGGLE_KEY = Enum.KeyCode.RightShift -- Default key to open/close the UI
+
+-- STORE ORIGINALS
 local OriginalAmbient = pcall(function() return Lighting.Ambient end) and Lighting.Ambient or Color3.new(0, 0, 0)
 local AmbientTween
 local AmbientActive = false
+local CharacterCleanupTable = {}
 
--- Helper function to safely brighten a color by lerping towards white (0-1 range safe)
+-- THEMES (Extending the dark theme professionalism)
+local Themes = {
+    Crimson = {
+        Main = Color3.fromRGB(15, 15, 15),
+        Accent = Color3.fromRGB(255, 75, 75),
+        Stroke = Color3.fromRGB(30, 30, 30),
+        Text = Color3.fromRGB(240, 240, 240),
+        SubText = Color3.fromRGB(180, 180, 180),
+        Input = Color3.fromRGB(25, 25, 25)
+    },
+    Ocean = {
+        Main = Color3.fromRGB(10, 15, 20),
+        Accent = Color3.fromRGB(0, 190, 255),
+        Stroke = Color3.fromRGB(20, 30, 40),
+        Text = Color3.fromRGB(230, 245, 255),
+        SubText = Color3.fromRGB(170, 200, 220),
+        Input = Color3.fromRGB(15, 25, 35)
+    },
+    Dark = { -- Default Theme
+        Main = Color3.fromRGB(18, 18, 18),
+        Accent = Color3.fromRGB(130, 130, 130), -- Subtle grey accent for professional look
+        Stroke = Color3.fromRGB(35, 35, 35),
+        Text = Color3.fromRGB(200, 200, 200),
+        SubText = Color3.fromRGB(150, 150, 150),
+        Input = Color3.fromRGB(25, 25, 25)
+    }
+}
+
+-- HELPER FUNCTIONS
+
 local function BrightenColor(color, factor)
     local white = Color3.new(1, 1, 1)
     return color:lerp(white, factor)
 end
 
-local Themes = {
-    Crimson = {
-        Main = Color3.fromRGB(20, 20, 20),
-        Accent = Color3.fromRGB(220, 60, 60),
-        Stroke = Color3.fromRGB(100, 30, 30),
-        Text = Color3.fromRGB(255, 230, 230),
-        Glow = Color3.fromRGB(255, 100, 100)
-    },
-    Blossom = {
-        Main = Color3.fromRGB(20, 18, 22),
-        Accent = Color3.fromRGB(255, 105, 180),
-        Stroke = Color3.fromRGB(120, 50, 90),
-        Text = Color3.fromRGB(255, 240, 255),
-        Glow = Color3.fromRGB(255, 150, 200)
-    },
-    Dark = { -- Default Theme
-        Main = Color3.fromRGB(10, 10, 10),
-        Accent = Color3.fromRGB(100, 100, 100),
-        Stroke = Color3.fromRGB(40, 40, 40),
-        Text = Color3.fromRGB(200, 200, 200),
-        Glow = Color3.fromRGB(150, 150, 150)
-    },
-    Ocean = {
-        Main = Color3.fromRGB(15, 20, 30),
-        Accent = Color3.fromRGB(0, 190, 255),
-        Stroke = Color3.fromRGB(30, 60, 90),
-        Text = Color3.fromRGB(230, 245, 255),
-        Glow = Color3.fromRGB(100, 200, 255)
-    }
-}
+local function Tween(Instance, Goal, Time, EasingStyle, EasingDirection)
+    local info = TweenInfo.new(Time or 0.5, EasingStyle or Enum.EasingStyle.Quart, EasingDirection or Enum.EasingDirection.Out)
+    return TweenService:Create(Instance, info, Goal):Play()
+end
 
--- Dynamic Ambient Effect (Added pcall for executor compatibility)
+local function Sound(id, volume, parent)
+    local sound = Instance.new("Sound")
+    sound.SoundId = "rbxassetid://" .. tostring(id)
+    sound.Volume = volume or 0.5
+    pcall(function() sound.Parent = parent end)
+    pcall(function() sound:Play() end)
+    return sound
+end
+
+-- DYNAMIC AMBIENT LIGHTING EFFECT (More robust)
 local function StartAmbientEffect(themeColor)
     AmbientActive = true
     spawn(function()
-        pcall(function() -- Wrap in pcall for environments that block Lighting access
+        pcall(function()
             while AmbientActive do
-                -- Tween 1: Darken slightly
-                AmbientTween = TweenService:Create(Lighting, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-                    Ambient = themeColor:Lerp(Color3.fromRGB(0, 0, 0), 0.7)
-                })
-                AmbientTween:Play()
-                AmbientTween.Completed:Wait()
-
-                -- Tween 2: Return to theme color
-                AmbientTween = TweenService:Create(Lighting, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-                    Ambient = themeColor
-                })
-                AmbientTween:Play()
-                AmbientTween.Completed:Wait()
+                local dark = themeColor:Lerp(Color3.fromRGB(0, 0, 0), 0.7)
+                Tween(Lighting, {Ambient = dark}, 1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut):Wait()
+                Tween(Lighting, {Ambient = themeColor}, 1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut):Wait()
             end
         end)
     end)
@@ -75,27 +86,19 @@ end
 
 local function StopAmbientEffect()
     AmbientActive = false
-    if AmbientTween then pcall(function() AmbientTween:Cancel() end) end
-    -- Restore original ambient color smoothly
-    pcall(function()
-        TweenService:Create(Lighting, TweenInfo.new(0.5), {Ambient = OriginalAmbient}):Play()
-    end)
+    pcall(function() if AmbientTween then AmbientTween:Cancel() end end)
+    pcall(function() Tween(Lighting, {Ambient = OriginalAmbient}, 0.5) end)
 end
 
--- Notification System Setup
+---------------------------------------------------
+--  NOTIFICATION SYSTEM (Cleaned up and separated)
+---------------------------------------------------
+
 local NotificationGui = Instance.new("ScreenGui")
 NotificationGui.Name = "LumaNotifications"
 NotificationGui.DisplayOrder = 100 
 NotificationGui.IgnoreGuiInset = true
-
-if gethui then
-    NotificationGui.Parent = gethui()
-elseif syn and syn.protect_gui then 
-    syn.protect_gui(NotificationGui)
-    NotificationGui.Parent = CoreGui
-else
-    NotificationGui.Parent = CoreGui
-end
+pcall(function() NotificationGui.Parent = CoreGui end) -- Use generic CoreGui parent
 
 local NotifContainer = Instance.new("Frame")
 NotifContainer.Name = "Container"
@@ -118,32 +121,29 @@ function LumaHub.Notify(Title, Message, Duration, ThemeKey)
     Notification.Position = UDim2.new(0, 0, 0, 0)
     Notification.Size = UDim2.new(1, 0, 0, 80)
     Notification.BackgroundTransparency = 1 
-
+    
+    -- Stack existing notifications
     for _, item in pairs(NotifContainer:GetChildren()) do
         if item:IsA("Frame") and item.Name == "Notification" and item ~= Notification then
-            TweenService:Create(item, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Position = item.Position + UDim2.new(0, 0, 0, 90)}):Play()
+            Tween(item, {Position = item.Position + UDim2.new(0, 0, 0, 90)}, 0.3)
         end
     end
 
-    local Corner = Instance.new("UICorner")
+    local Corner = Instance.new("UICorner", Notification)
     Corner.CornerRadius = UDim.new(0, 8)
-    Corner.Parent = Notification
 
-    local Stroke = Instance.new("UIStroke")
-    Stroke.Parent = Notification
+    local Stroke = Instance.new("UIStroke", Notification)
     Stroke.Thickness = 2
     Stroke.Color = Theme.Stroke
     Stroke.Transparency = 0.5
     
-    local AccentBar = Instance.new("Frame")
-    AccentBar.Parent = Notification
+    local AccentBar = Instance.new("Frame", Notification)
     AccentBar.BackgroundColor3 = Theme.Accent
     AccentBar.BorderSizePixel = 0
     AccentBar.Position = UDim2.new(0, 0, 0, 0)
-    AccentBar.Size = UDim2.new(0, 5, 1, 0)
-
-    local TitleLabel = Instance.new("TextLabel")
-    TitleLabel.Parent = Notification
+    AccentBar.Size = UDim2.new(0, 3, 1, 0)
+    
+    local TitleLabel = Instance.new("TextLabel", Notification)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.Font = Enum.Font.GothamBold
     TitleLabel.Text = Title
@@ -154,12 +154,11 @@ function LumaHub.Notify(Title, Message, Duration, ThemeKey)
     TitleLabel.Size = UDim2.new(1, -20, 0.4, 0)
     TitleLabel.TextTransparency = 1 
 
-    local MessageLabel = Instance.new("TextLabel")
-    MessageLabel.Parent = Notification
+    local MessageLabel = Instance.new("TextLabel", Notification)
     MessageLabel.BackgroundTransparency = 1
     MessageLabel.Font = Enum.Font.Gotham
     MessageLabel.Text = Message
-    MessageLabel.TextColor3 = BrightenColor(Theme.Text, 0.2)
+    MessageLabel.TextColor3 = Theme.SubText
     MessageLabel.TextSize = 13
     MessageLabel.TextXAlignment = Enum.TextXAlignment.Left
     MessageLabel.Position = UDim2.new(0, 15, 0.4, 0)
@@ -171,40 +170,34 @@ function LumaHub.Notify(Title, Message, Duration, ThemeKey)
     local initialPosition = Notification.Position
     Notification.Position = UDim2.new(0, 300, initialPosition.Y.Offset, 0) 
     
-    TweenService:Create(Notification, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-        Position = initialPosition,
-        BackgroundTransparency = 0.05 -- Use a very low transparency for visibility
-    }):Play()
+    Tween(Notification, {Position = initialPosition, BackgroundTransparency = 0.05}, 0.5)
+    Tween(TitleLabel, {TextTransparency = 0}, 0.5)
+    Tween(MessageLabel, {TextTransparency = 0}, 0.5)
     
-    TweenService:Create(TitleLabel, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
-    TweenService:Create(MessageLabel, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
+    Sound(1063273387, 0.5, Notification) -- Notification chime
     
-    local NotifSound = Instance.new("Sound")
-    NotifSound.SoundId = "rbxassetid://1063273387" 
-    NotifSound.Volume = 0.5
-    NotifSound.Parent = Notification
-    pcall(function() NotifSound:Play() end)
-
     task.wait(Duration)
     
     -- Animate Out
-    TweenService:Create(Notification, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-        Position = UDim2.new(0, 300, initialPosition.Y.Offset, 0),
-        BackgroundTransparency = 1
-    }):Play()
-    TweenService:Create(TitleLabel, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
-    TweenService:Create(MessageLabel, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
+    Tween(Notification, {Position = UDim2.new(0, 300, initialPosition.Y.Offset, 0), BackgroundTransparency = 1}, 0.5)
+    Tween(TitleLabel, {TextTransparency = 1}, 0.5)
+    Tween(MessageLabel, {TextTransparency = 1}, 0.5)
     
     task.wait(0.5)
     Notification:Destroy()
 
+    -- Pull remaining notifications up
     local offsetAdjustment = -90
     for _, item in pairs(NotifContainer:GetChildren()) do
         if item:IsA("Frame") and item.Name == "Notification" then
-            TweenService:Create(item, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Position = item.Position + UDim2.new(0, 0, 0, offsetAdjustment)}):Play()
+            Tween(item, {Position = item.Position + UDim2.new(0, 0, 0, offsetAdjustment)}, 0.3)
         end
     end
 end
+
+---------------------------------------------------
+--  LOADER UI FUNCTIONS (UILoader.Load)
+---------------------------------------------------
 
 function LumaHub.Load(Settings)
     Settings = Settings or {}
@@ -223,52 +216,42 @@ function LumaHub.Load(Settings)
     LumaGui.Name = "LumaLoader"
     LumaGui.IgnoreGuiInset = true
     LumaGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    
-    if gethui then
-        LumaGui.Parent = gethui()
-    elseif syn and syn.protect_gui then 
-        syn.protect_gui(LumaGui)
-        LumaGui.Parent = CoreGui
-    else
-        LumaGui.Parent = CoreGui
-    end
-    
+    pcall(function() LumaGui.Parent = CoreGui end)
+
     local Blur = Instance.new("BlurEffect")
-    pcall(function() Blur.Size = 0 end) -- Wrap Blur manipulation in pcall
+    pcall(function() Blur.Size = 0 end)
     pcall(function() Blur.Parent = game.Workspace.CurrentCamera end)
 
     StartAmbientEffect(SelectedTheme.Accent)
 
-    -- Main Background Frame (Set fixed BackgroundColor3 for reliability)
+    -- MAIN LOADER FRAME
     local MainBackground = Instance.new("Frame")
     MainBackground.Name = "MainBackground"
     MainBackground.Parent = LumaGui
     MainBackground.AnchorPoint = Vector2.new(0.5, 0.5)
-    MainBackground.BackgroundColor3 = SelectedTheme.Main -- Use the theme's main color directly
+    MainBackground.BackgroundColor3 = SelectedTheme.Main
     MainBackground.BorderSizePixel = 0
     MainBackground.Position = UDim2.new(0.5, 0, 0.5, 0)
     MainBackground.Size = UDim2.new(0, 0, 0, 0) 
     MainBackground.ClipsDescendants = true
     MainBackground.BackgroundTransparency = 1 
     
-    local MainCorner = Instance.new("UICorner")
+    local MainCorner = Instance.new("UICorner", MainBackground)
     MainCorner.CornerRadius = UDim.new(0, 12)
-    MainCorner.Parent = MainBackground
     
-    local MainStroke = Instance.new("UIStroke")
-    MainStroke.Parent = MainBackground
+    local MainStroke = Instance.new("UIStroke", MainBackground)
     MainStroke.Thickness = 2
     MainStroke.Color = SelectedTheme.Stroke
     MainStroke.Transparency = 1
     
-    local BackgroundGradient = Instance.new("UIGradient")
+    -- Animated gradient (ColorSequence check for error fix)
+    local BackgroundGradient = Instance.new("UIGradient", MainBackground)
     BackgroundGradient.Rotation = 45
     BackgroundGradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, SelectedTheme.Main),
         ColorSequenceKeypoint.new(0.5, BrightenColor(SelectedTheme.Main, 0.15)), 
         ColorSequenceKeypoint.new(1, SelectedTheme.Main)
     })
-    BackgroundGradient.Parent = MainBackground
     
     local gradientActive = true
     spawn(function()
@@ -282,9 +265,8 @@ function LumaHub.Load(Settings)
     end)
     
     -- Glow effect
-    local GlowFrame = Instance.new("Frame")
+    local GlowFrame = Instance.new("Frame", MainBackground)
     GlowFrame.Name = "Glow"
-    GlowFrame.Parent = MainBackground
     GlowFrame.AnchorPoint = Vector2.new(0.5, 0.5)
     GlowFrame.BackgroundColor3 = SelectedTheme.Glow
     GlowFrame.BackgroundTransparency = 1 
@@ -293,34 +275,18 @@ function LumaHub.Load(Settings)
     GlowFrame.Size = UDim2.new(1.1, 0, 1.1, 0)
     GlowFrame.ZIndex = 0
     
-    local GlowCorner = Instance.new("UICorner")
+    local GlowCorner = Instance.new("UICorner", GlowFrame)
     GlowCorner.CornerRadius = UDim.new(0, 12)
-    GlowCorner.Parent = GlowFrame
     
-    local ContentContainer = Instance.new("Frame")
+    local ContentContainer = Instance.new("Frame", MainBackground)
     ContentContainer.Name = "Content"
-    ContentContainer.Parent = MainBackground
     ContentContainer.BackgroundTransparency = 1
     ContentContainer.Size = UDim2.new(1, 0, 1, 0)
     ContentContainer.Visible = false
     ContentContainer.ZIndex = 2
     
     -- Title elements
-    local TitleShadow = Instance.new("TextLabel")
-    TitleShadow.Parent = ContentContainer
-    TitleShadow.BackgroundTransparency = 1
-    TitleShadow.Position = UDim2.new(0.052, 0, 0.082, 0)
-    TitleShadow.Size = UDim2.new(0.9, 0, 0.1, 0)
-    TitleShadow.Font = Enum.Font.GothamBold
-    TitleShadow.Text = TitleText
-    TitleShadow.TextColor3 = Color3.fromRGB(0, 0, 0)
-    TitleShadow.TextSize = 22
-    TitleShadow.TextXAlignment = Enum.TextXAlignment.Left
-    TitleShadow.TextTransparency = 1 
-    TitleShadow.ZIndex = 1
-    
-    local TitleLabel = Instance.new("TextLabel")
-    TitleLabel.Parent = ContentContainer
+    local TitleLabel = Instance.new("TextLabel", ContentContainer)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.Position = UDim2.new(0.05, 0, 0.08, 0)
     TitleLabel.Size = UDim2.new(0.9, 0, 0.1, 0)
@@ -332,55 +298,36 @@ function LumaHub.Load(Settings)
     TitleLabel.TextTransparency = 1 
     TitleLabel.ZIndex = 2
     
-    local TitleGlow = Instance.new("TextLabel")
-    TitleGlow.Parent = ContentContainer
-    TitleGlow.BackgroundTransparency = 1
-    TitleGlow.Position = UDim2.new(0.05, 0, 0.08, 0)
-    TitleGlow.Size = UDim2.new(0.9, 0, 0.1, 0)
-    TitleGlow.Font = Enum.Font.GothamBold
-    TitleGlow.Text = TitleText
-    TitleGlow.TextColor3 = SelectedTheme.Accent
-    TitleGlow.TextSize = 22
-    TitleGlow.TextXAlignment = Enum.TextXAlignment.Left
-    TitleGlow.TextTransparency = 1 
-    TitleGlow.ZIndex = 3
-    
     -- Animated loading bar
-    local LoadingBarContainer = Instance.new("Frame")
-    LoadingBarContainer.Parent = ContentContainer
-    LoadingBarContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    local LoadingBarContainer = Instance.new("Frame", ContentContainer)
+    LoadingBarContainer.BackgroundColor3 = SelectedTheme.Input
     LoadingBarContainer.BorderSizePixel = 0
     LoadingBarContainer.Position = UDim2.new(0.05, 0, 0.85, 0)
     LoadingBarContainer.Size = UDim2.new(0.9, 0, 0.03, 0)
     LoadingBarContainer.BackgroundTransparency = 1 
     
-    local BarCorner = Instance.new("UICorner")
+    local BarCorner = Instance.new("UICorner", LoadingBarContainer)
     BarCorner.CornerRadius = UDim.new(1, 0)
-    BarCorner.Parent = LoadingBarContainer
     
-    local BarStroke = Instance.new("UIStroke")
-    BarStroke.Parent = LoadingBarContainer
+    local BarStroke = Instance.new("UIStroke", LoadingBarContainer)
     BarStroke.Thickness = 1
     BarStroke.Color = SelectedTheme.Stroke
     BarStroke.Transparency = 1
     
-    local LoadingFill = Instance.new("Frame")
-    LoadingFill.Parent = LoadingBarContainer
+    local LoadingFill = Instance.new("Frame", LoadingBarContainer)
     LoadingFill.BackgroundColor3 = SelectedTheme.Accent
     LoadingFill.BorderSizePixel = 0
     LoadingFill.Size = UDim2.new(0, 0, 1, 0)
     
-    local FillCorner = Instance.new("UICorner")
+    local FillCorner = Instance.new("UICorner", LoadingFill)
     FillCorner.CornerRadius = UDim.new(1, 0)
-    FillCorner.Parent = LoadingFill
     
-    local FillGradient = Instance.new("UIGradient")
+    local FillGradient = Instance.new("UIGradient", LoadingFill)
     FillGradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, SelectedTheme.Accent),
         ColorSequenceKeypoint.new(0.5, BrightenColor(SelectedTheme.Accent, 0.1)), 
         ColorSequenceKeypoint.new(1, SelectedTheme.Accent)
     })
-    FillGradient.Parent = LoadingFill
     
     local shimmerActive = true
     spawn(function()
@@ -398,31 +345,27 @@ function LumaHub.Load(Settings)
         end
     end)
     
-    -- ViewportFrame
-    local ViewportContainer = Instance.new("Frame")
-    ViewportContainer.Parent = ContentContainer
-    ViewportContainer.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    -- ViewportFrame Container
+    local ViewportContainer = Instance.new("Frame", ContentContainer)
+    ViewportContainer.BackgroundColor3 = SelectedTheme.Input
     ViewportContainer.BackgroundTransparency = 1 
     ViewportContainer.Position = UDim2.new(0.05, 0, 0.22, 0)
     ViewportContainer.Size = UDim2.new(0.25, 0, 0.55, 0)
     
-    local ViewportCorner = Instance.new("UICorner")
+    local ViewportCorner = Instance.new("UICorner", ViewportContainer)
     ViewportCorner.CornerRadius = UDim.new(0, 10)
-    ViewportCorner.Parent = ViewportContainer
     
-    local ViewportStroke = Instance.new("UIStroke")
-    ViewportStroke.Parent = ViewportContainer
+    local ViewportStroke = Instance.new("UIStroke", ViewportContainer)
     ViewportStroke.Thickness = 2
     ViewportStroke.Color = SelectedTheme.Accent
     ViewportStroke.Transparency = 1
     
-    local ViewportGradient = Instance.new("UIGradient")
+    local ViewportGradient = Instance.new("UIGradient", ViewportStroke)
     ViewportGradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, SelectedTheme.Accent),
         ColorSequenceKeypoint.new(0.5, SelectedTheme.Stroke),
         ColorSequenceKeypoint.new(1, SelectedTheme.Accent)
     })
-    ViewportGradient.Parent = ViewportStroke
     
     local borderActive = true
     spawn(function()
@@ -435,39 +378,31 @@ function LumaHub.Load(Settings)
         end
     end)
     
-    local AvatarView = Instance.new("ViewportFrame")
-    AvatarView.Parent = ViewportContainer
+    local AvatarView = Instance.new("ViewportFrame", ViewportContainer)
     AvatarView.BackgroundTransparency = 1
     AvatarView.Size = UDim2.new(1, 0, 1, 0)
     AvatarView.Ambient = Color3.fromRGB(255, 255, 255)
-    AvatarView.LightColor = SelectedTheme.Accent
+    AvatarView.LightColor = BrightenColor(SelectedTheme.Accent, 0.2)
     AvatarView.LightDirection = Vector3.new(0, -1, -1)
     
-    local WorldModel = Instance.new("WorldModel")
-    WorldModel.Parent = AvatarView
-    
-    local Camera = Instance.new("Camera")
-    Camera.Parent = AvatarView
+    local WorldModel = Instance.new("WorldModel", AvatarView)
+    local Camera = Instance.new("Camera", AvatarView)
     AvatarView.CurrentCamera = Camera
     
-    local ClonedChar, AnimTrack, CameraConn
+    local AnimTrack, CameraConn
     
-    -- IMPROVED: Robust ViewportFrame Character Loading
+    -- ROBUST AVATAR LOADING
     spawn(function()
         local success, char = pcall(function()
-            -- Wait longer for the character to ensure it's loaded
             local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-            local success, clone = pcall(function() return character:Clone() end)
-            if success then
-                return clone
-            else
-                return nil
-            end
+            local clone = character:Clone()
+            return clone
         end)
 
         if success and char and char:FindFirstChild("HumanoidRootPart") then
-            ClonedChar = char
+            local ClonedChar = char
             ClonedChar.Parent = WorldModel
+            table.insert(CharacterCleanupTable, ClonedChar)
             
             local RootPart = ClonedChar:WaitForChild("HumanoidRootPart")
             RootPart.Anchored = true
@@ -477,7 +412,7 @@ function LumaHub.Load(Settings)
             local Animator = Humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator", Humanoid)
             
             local Animation = Instance.new("Animation")
-            Animation.AnimationId = "rbxassetid://3695333486" 
+            Animation.AnimationId = "rbxassetid://3695333486" -- Safe default
             
             pcall(function()
                 AnimTrack = Animator:LoadAnimation(Animation)
@@ -489,10 +424,8 @@ function LumaHub.Load(Settings)
             
             Camera.CFrame = CFrame.new(Vector3.new(0, 1.5, -5), RootPart.Position + Vector3.new(0, 1, 0))
             
-            -- Initial 360 rotation (Guaranteed to run once the character is ready)
-            TweenService:Create(RootPart, TweenInfo.new(1.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                CFrame = RootPart.CFrame * CFrame.Angles(0, math.rad(360), 0)
-            }):Play()
+            -- Initial 360 rotation (Improved, more reliable tween)
+            Tween(RootPart, {CFrame = RootPart.CFrame * CFrame.Angles(0, math.rad(360), 0)}, 1.5, Enum.EasingStyle.Quart)
             
             local CameraTime = 0
             CameraConn = RunService.RenderStepped:Connect(function(dt)
@@ -502,12 +435,19 @@ function LumaHub.Load(Settings)
                     Camera.CFrame = CFrame.new(Vector3.new(Offset, 1.5 + math.sin(CameraTime) * 0.2, -5), RootPart.Position + Vector3.new(0, 1, 0))
                 end
             end)
+        else
+             -- Fallback text if avatar fails to load
+            local FailLabel = Instance.new("TextLabel", ViewportContainer)
+            FailLabel.Text = "Avatar Failed to Load"
+            FailLabel.TextColor3 = Color3.fromRGB(200, 50, 50)
+            FailLabel.BackgroundTransparency = 1
+            FailLabel.Size = UDim2.new(1, 0, 1, 0)
+            FailLabel.Font = Enum.Font.Gotham
         end
     end)
     
     -- Info Labels
-    local InfoFrame = Instance.new("Frame")
-    InfoFrame.Parent = ContentContainer
+    local InfoFrame = Instance.new("Frame", ContentContainer)
     InfoFrame.BackgroundTransparency = 1
     InfoFrame.Position = UDim2.new(0.35, 0, 0.22, 0)
     InfoFrame.Size = UDim2.new(0.6, 0, 0.55, 0)
@@ -519,24 +459,21 @@ function LumaHub.Load(Settings)
         Container.Position = UDim2.new(0, 0, (Order - 1) * 0.25, 0)
         Container.Size = UDim2.new(1, 0, 0.2, 0)
         
-        local Accent = Instance.new("Frame")
-        Accent.Parent = Container
+        local Accent = Instance.new("Frame", Container)
         Accent.BackgroundColor3 = SelectedTheme.Accent
         Accent.BorderSizePixel = 0
-        Accent.Size = UDim2.new(0, 0, 0, 2)
-        Accent.Position = UDim2.new(0, 0, 1, -2)
+        Accent.Size = UDim2.new(0, 0, 0, 1) -- Thinner line for professionalism
+        Accent.Position = UDim2.new(0, 0, 1, -1)
         
-        local AccentCorner = Instance.new("UICorner")
+        local AccentCorner = Instance.new("UICorner", Accent)
         AccentCorner.CornerRadius = UDim.new(1, 0)
-        AccentCorner.Parent = Accent
         
         spawn(function()
             task.wait(Order * 0.1)
-            TweenService:Create(Accent, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {Size = UDim2.new(1, 0, 0, 2)}):Play()
+            Tween(Accent, {Size = UDim2.new(1, 0, 0, 1)}, 0.5)
         end)
         
-        local Label = Instance.new("TextLabel")
-        Label.Parent = Container
+        local Label = Instance.new("TextLabel", Container)
         Label.BackgroundTransparency = 1
         Label.Size = UDim2.new(1, 0, 1, 0)
         Label.Font = Enum.Font.GothamMedium
@@ -558,8 +495,7 @@ function LumaHub.Load(Settings)
     local particlesActive = true
     local function CreateParticles()
         for i = 1, 15 do
-            local Particle = Instance.new("Frame")
-            Particle.Parent = MainBackground
+            local Particle = Instance.new("Frame", MainBackground)
             Particle.BackgroundColor3 = SelectedTheme.Accent
             Particle.BackgroundTransparency = 1 
             Particle.BorderSizePixel = 0
@@ -567,40 +503,33 @@ function LumaHub.Load(Settings)
             Particle.Position = UDim2.new(math.random(), 0, math.random(), 0)
             Particle.ZIndex = 10
             
-            local Corner = Instance.new("UICorner")
+            local Corner = Instance.new("UICorner", Particle)
             Corner.CornerRadius = UDim.new(1, 0)
-            Corner.Parent = Particle
             
             spawn(function()
-                TweenService:Create(Particle, TweenInfo.new(0.5), {BackgroundTransparency = 0.7}):Play()
+                Tween(Particle, {BackgroundTransparency = 0.7}, 0.5)
                 while particlesActive and Particle.Parent do
                     local NewPos = UDim2.new(math.random(), 0, math.random(), 0)
-                    TweenService:Create(Particle, TweenInfo.new(math.random(2, 4), Enum.EasingStyle.Sine), {Position = NewPos}):Play()
+                    Tween(Particle, {Position = NewPos}, math.random(2, 4), Enum.EasingStyle.Sine)
                     task.wait(math.random(2, 4))
                 end
             end)
         end
     end
     
-    -- Sound Effect: UI Open Chime
-    local OpenSound = Instance.new("Sound")
-    OpenSound.SoundId = "rbxassetid://600200877" 
-    OpenSound.Volume = 0.5 
-    OpenSound.Parent = LumaGui
-    pcall(function() OpenSound:Play() end)
+    Sound(600200877, 0.3, LumaGui) -- UI Open Chime (Lower volume)
     
     -- 1. INITIAL OPENING TWEEN (SMOOTH SIZE AND FADE)
-    pcall(function() TweenService:Create(Blur, TweenInfo.new(0.5), {Size = 15}):Play() end)
+    pcall(function() Tween(Blur, {Size = 15}, 0.5) end)
     
-    local OpenTween = TweenService:Create(MainBackground, TweenInfo.new(0.8, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 520, 0, 280),
-        BackgroundTransparency = 0 -- Fade to fully visible background color
-    })
-    OpenTween:Play()
+    local OpenTween = Tween(MainBackground, {
+        Size = LOADER_SIZE,
+        BackgroundTransparency = 0 -- Fully visible
+    }, 0.8, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
     
     spawn(function()
         task.wait(0.3)
-        TweenService:Create(GlowFrame, TweenInfo.new(1.5, Enum.EasingStyle.Quad), {BackgroundTransparency = 0.7}):Play()
+        Tween(GlowFrame, {BackgroundTransparency = 0.7}, 1.5)
     end)
     
     OpenTween.Completed:Wait()
@@ -612,64 +541,46 @@ function LumaHub.Load(Settings)
     local FadeInfo = TweenInfo.new(0.6, Enum.EasingStyle.Quart)
     
     TweenService:Create(MainStroke, FadeInfo, {Transparency = 0.3}):Play()
-    TweenService:Create(ViewportContainer, FadeInfo, {BackgroundTransparency = 0.9}):Play()
+    TweenService:Create(ViewportContainer, FadeInfo, {BackgroundTransparency = 0.05}):Play()
     TweenService:Create(ViewportStroke, FadeInfo, {Transparency = 0.3}):Play()
 
-    -- Staggered text fade-in
     TweenService:Create(TitleLabel, FadeInfo, {TextTransparency = 0}):Play()
-    TweenService:Create(TitleShadow, FadeInfo, {TextTransparency = 0.7}):Play()
-    TweenService:Create(TitleGlow, FadeInfo, {TextTransparency = 0.8}):Play()
-    task.wait(0.1)
-
     TweenService:Create(LoadingBarContainer, FadeInfo, {BackgroundTransparency = 0.7}):Play()
     TweenService:Create(BarStroke, FadeInfo, {Transparency = 0.5}):Play()
     task.wait(0.1)
 
     for _, lbl in pairs({NameLabel, IDLabel, ClientLabel, StatusLabel}) do
         TweenService:Create(lbl, FadeInfo, {TextTransparency = 0}):Play()
-        task.wait(0.1)
+        task.wait(0.05)
     end
     
     -- 3. LOADING STAGES
-    StatusLabel.Text = "STATUS: Loading Scripts..."
-    TweenService:Create(LoadingFill, TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {Size = UDim2.new(0.35, 0, 1, 0)}):Play()
+    StatusLabel.Text = "STATUS: Loading Core Modules..."
+    Tween(LoadingFill, {Size = UDim2.new(0.35, 0, 1, 0)}, 1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
     task.wait(1.2)
-    
-    local StageSound = Instance.new("Sound")
-    StageSound.SoundId = "rbxassetid://1063273387" 
-    StageSound.Volume = 0.4
-    StageSound.Parent = LumaGui
-    pcall(function() StageSound:Play() end)
+    Sound(1063273387, 0.4, LumaGui) -- Stage Complete
 
-    StatusLabel.Text = "STATUS: Getting Data..."
-    TweenService:Create(LoadingFill, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {Size = UDim2.new(0.75, 0, 1, 0)}):Play()
+    StatusLabel.Text = "STATUS: Initializing Components..."
+    Tween(LoadingFill, {Size = UDim2.new(0.75, 0, 1, 0)}, 1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
     task.wait(1)
+    Sound(1063273387, 0.4, LumaGui)
 
-    pcall(function() StageSound:Play() end)
-    
-    StatusLabel.Text = "STATUS: Finalizing..."
-    TweenService:Create(LoadingFill, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {Size = UDim2.new(0.95, 0, 1, 0)}):Play()
+    StatusLabel.Text = "STATUS: Injecting Hooks & Finalizing..."
+    Tween(LoadingFill, {Size = UDim2.new(0.95, 0, 1, 0)}, 0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
     task.wait(0.8)
     
-    StatusLabel.Text = "STATUS: Ready!"
+    StatusLabel.Text = "STATUS: READY!"
     StatusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
-    TweenService:Create(LoadingFill, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)}):Play()
+    Tween(LoadingFill, {Size = UDim2.new(1, 0, 1, 0)}, 0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+    Sound(4488899884, 0.8, LumaGui) -- Ready Chime
 
-    local ReadySound = Instance.new("Sound")
-    ReadySound.SoundId = "rbxassetid://4488899884" 
-    ReadySound.Volume = 0.8
-    ReadySound.Parent = LumaGui
-    pcall(function() ReadySound:Play() end)
-
-    LumaHub.Notify("LumaHub Loaded", "Welcome, " .. LocalPlayer.DisplayName .. "! Core UI Initialized.", 4, Settings.Theme or "Dark")
+    LumaHub.Notify("LumaHub Loaded", "Welcome! Press Right Shift to toggle.", 4, Settings.Theme or "Dark")
 
     task.wait(0.8)
     
     -- 4. CLOSING TWEEN (PROFESSIONAL FADE OUT)
-    StopAmbientEffect() 
-    pcall(function() TweenService:Create(Blur, TweenInfo.new(0.6), {Size = 0}):Play() end)
     
-    -- Fade out all content completely first
+    -- Fade out content/loader box
     local CloseFadeInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quart)
     
     TweenService:Create(ContentContainer, CloseFadeInfo, {BackgroundTransparency = 1}):Play()
@@ -677,33 +588,265 @@ function LumaHub.Load(Settings)
     TweenService:Create(MainStroke, CloseFadeInfo, {Transparency = 1}):Play()
     TweenService:Create(GlowFrame, CloseFadeInfo, {BackgroundTransparency = 1}):Play()
     
-    local CloseSound = Instance.new("Sound")
-    CloseSound.SoundId = "rbxassetid://600201103" 
-    CloseSound.Volume = 0.5 
-    CloseSound.Parent = LumaGui
-    pcall(function() CloseSound:Play() end)
+    Sound(600201103, 0.5, LumaGui) -- UI Close
     
     task.wait(0.5) 
     
-    -- Then shrink the main frame (smooth transition)
-    local CloseTween = TweenService:Create(MainBackground, TweenInfo.new(0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)})
-    CloseTween:Play()
-    CloseTween.Completed:Wait()
+    -- Shrink the main frame (smooth transition)
+    Tween(MainBackground, {Size = UDim2.new(0, 0, 0, 0)}, 0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.In):Wait()
     
-    -- Cleanup
+    -- Cleanup Loader
     gradientActive = false
     shimmerActive = false
     borderActive = false
     particlesActive = false
     
-    if CameraConn then pcall(function() CameraConn:Disconnect() end) end
-    if AnimTrack then pcall(function() AnimTrack:Stop() end) end
+    pcall(function() if CameraConn then CameraConn:Disconnect() end end)
+    pcall(function() if AnimTrack then AnimTrack:Stop() end end)
+    for _, item in pairs(CharacterCleanupTable) do pcall(function() item:Destroy() end) end
     
     pcall(function() Blur:Destroy() end)
     LumaGui:Destroy()
     
+    -- NOW INITIALIZE THE MAIN UI
+    local MainUI = LumaHub.CreateMainUI(SelectedTheme)
+    
+    -- Toggle Logic
+    local IsOpen = false
+    local function ToggleUI()
+        IsOpen = not IsOpen
+        if IsOpen then
+            pcall(function() Tween(MainUI.Blur, {Size = 10}, 0.3) end)
+            Tween(MainUI.Container, {Position = UDim2.new(0.5, 0, 0.5, 0)}, 0.4)
+            Sound(600200877, 0.3, MainUI.Gui)
+        else
+            pcall(function() Tween(MainUI.Blur, {Size = 0}, 0.3) end)
+            Tween(MainUI.Container, {Position = UDim2.new(0.5, 0, 0.5, 50)}, 0.4) -- Slight drop effect
+            Sound(600201103, 0.3, MainUI.Gui)
+        end
+        MainUI.Container.Active = IsOpen
+    end
+
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if input.KeyCode == TOGGLE_KEY and not gameProcessed then
+            ToggleUI()
+        end
+    end)
+    
     return LumaHub 
 end
 
--- Return the LumaHub TABLE (contains Load and Notify)
+
+---------------------------------------------------
+--  MAIN UI STRUCTURE (Core UI - ~700 Lines)
+---------------------------------------------------
+
+function LumaHub.CreateMainUI(Theme)
+    
+    local Gui = Instance.new("ScreenGui")
+    Gui.Name = "LumaHub_MainUI"
+    Gui.IgnoreGuiInset = true
+    Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    pcall(function() Gui.Parent = CoreGui end)
+
+    local Blur = Instance.new("BlurEffect")
+    pcall(function() Blur.Size = 0 end)
+    pcall(function() Blur.Parent = game.Workspace.CurrentCamera end)
+
+    local Container = Instance.new("Frame", Gui)
+    Container.Name = "MainContainer"
+    Container.AnchorPoint = Vector2.new(0.5, 0.5)
+    Container.Position = UDim2.new(0.5, 0, 0.5, 50) -- Start slightly off-screen for toggle drop effect
+    Container.Size = UI_SIZE
+    Container.BackgroundColor3 = Theme.Main
+    Container.BackgroundTransparency = 0.05
+    Container.BorderSizePixel = 0
+    Container.Active = false -- Hidden initially
+    
+    local Corner = Instance.new("UICorner", Container)
+    Corner.CornerRadius = UDim.new(0, 15)
+    
+    local Stroke = Instance.new("UIStroke", Container)
+    Stroke.Thickness = 2
+    Stroke.Color = Theme.Stroke
+    Stroke.Transparency = 0.1
+    
+    -- UI Gradient effect
+    local UIGrad = Instance.new("UIGradient", Container)
+    UIGrad.Rotation = 90
+    UIGrad.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Theme.Main),
+        ColorSequenceKeypoint.new(0.01, BrightenColor(Theme.Main, 0.05)),
+        ColorSequenceKeypoint.new(1, Theme.Main)
+    })
+
+    -- 1. SIDEBAR (Navigation/Tabs)
+    local Sidebar = Instance.new("Frame", Container)
+    Sidebar.Name = "Sidebar"
+    Sidebar.BackgroundColor3 = BrightenColor(Theme.Main, 0.05)
+    Sidebar.BackgroundTransparency = 0
+    Sidebar.BorderSizePixel = 0
+    Sidebar.Position = UDim2.new(0, 0, 0, 0)
+    Sidebar.Size = UDim2.new(0, SIDEBAR_WIDTH, 1, 0)
+    Sidebar.ClipsDescendants = true
+    
+    local SidebarStroke = Instance.new("UIStroke", Sidebar)
+    SidebarStroke.Thickness = 1
+    SidebarStroke.Color = Theme.Stroke
+    SidebarStroke.Transparency = 0.5
+    SidebarStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+    local Padding = Instance.new("UIPadding", Sidebar)
+    Padding.PaddingTop = UDim.new(0, 10)
+    Padding.PaddingBottom = UDim.new(0, 10)
+    
+    local List = Instance.new("UIListLayout", Sidebar)
+    List.SortOrder = Enum.SortOrder.LayoutOrder
+    List.Padding = UDim.new(0, 5)
+    List.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    
+    -- Sidebar Title
+    local SidebarTitle = Instance.new("TextLabel", Sidebar)
+    SidebarTitle.Text = "LUMA HUB"
+    SidebarTitle.Font = Enum.Font.GothamBold
+    SidebarTitle.TextColor3 = Theme.Accent
+    SidebarTitle.TextSize = 18
+    SidebarTitle.BackgroundTransparency = 1
+    SidebarTitle.Size = UDim2.new(1, 0, 0, 30)
+    SidebarTitle.LayoutOrder = 0
+    
+    -- Tab data storage
+    local TabButtons = {}
+    local TabPages = {}
+    local ActiveTab = nil
+    
+    local function CreateTab(Name, Icon, LayoutOrder)
+        -- Button
+        local Button = Instance.new("TextButton", Sidebar)
+        Button.Name = Name .. "Button"
+        Button.Text = "  " .. Name
+        Button.Font = Enum.Font.GothamMedium
+        Button.TextColor3 = Theme.SubText
+        Button.TextSize = 16
+        Button.TextXAlignment = Enum.TextXAlignment.Left
+        Button.BackgroundColor3 = Theme.Main
+        Button.BackgroundTransparency = 1
+        Button.Size = UDim2.new(0.9, 0, 0, 35)
+        Button.LayoutOrder = LayoutOrder
+        
+        -- Accent Indicator
+        local Indicator = Instance.new("Frame", Button)
+        Indicator.Name = "Indicator"
+        Indicator.Size = UDim2.new(0, 3, 1, 0)
+        Indicator.BackgroundColor3 = Theme.Accent
+        Indicator.BackgroundTransparency = 1 -- Hidden initially
+        
+        -- Page
+        local Page = Instance.new("Frame", Content)
+        Page.Name = Name .. "Page"
+        Page.BackgroundTransparency = 1
+        Page.Size = UDim2.new(1, 0, 1, 0)
+        Page.Visible = false
+        
+        table.insert(TabButtons, Button)
+        TabPages[Name] = Page
+        
+        -- Activation Logic
+        local function SelectTab()
+            if ActiveTab == Name then return end
+
+            -- Deactivate previous tab
+            if ActiveTab then
+                Tween(TabButtons[ActiveTab].Indicator, {BackgroundTransparency = 1}, 0.2)
+                TabButtons[ActiveTab].TextColor3 = Theme.SubText
+                TabPages[ActiveTab].Visible = false
+            end
+            
+            -- Activate new tab
+            ActiveTab = Name
+            Tween(Indicator, {BackgroundTransparency = 0}, 0.2)
+            Button.TextColor3 = Theme.Text
+            Page.Visible = true
+            Sound(600201103, 0.3, Button) -- Subtle select sound
+        end
+        
+        Button.MouseButton1Click:Connect(SelectTab)
+
+        -- Initial setup to store button by name
+        TabButtons[Name] = Button
+        
+        return {Button = Button, Page = Page, Select = SelectTab}
+    end
+
+    -- 2. CONTENT AREA (Tabs go here)
+    local Content = Instance.new("Frame", Container)
+    Content.Name = "ContentArea"
+    Content.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    Content.BackgroundTransparency = 1
+    Content.BorderSizePixel = 0
+    Content.Position = UDim2.new(0, SIDEBAR_WIDTH, 0, 0)
+    Content.Size = UDim2.new(1, -SIDEBAR_WIDTH, 1, 0)
+    
+    -- Padding for Content Area
+    local ContentPadding = Instance.new("UIPadding", Content)
+    ContentPadding.PaddingLeft = UDim.new(0, 15)
+    ContentPadding.PaddingTop = UDim.new(0, 15)
+    ContentPadding.PaddingRight = UDim.new(0, 15)
+    ContentPadding.PaddingBottom = UDim.new(0, 15)
+    
+    -- Content List Layout (for modules)
+    local ContentList = Instance.new("UIListLayout", Content)
+    ContentList.SortOrder = Enum.SortOrder.LayoutOrder
+    ContentList.Padding = UDim.new(0, 10)
+    ContentList.FillDirection = Enum.FillDirection.Vertical
+    ContentList.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    
+    -- Add Default Tabs
+    local Toggles = CreateTab("Toggles", nil, 1)
+    local Combat = CreateTab("Combat", nil, 2)
+    local Player = CreateTab("Player", nil, 3)
+    local Movement = CreateTab("Movement", nil, 4)
+    local Settings = CreateTab("Settings", nil, 99)
+    
+    -- Automatically select the first tab
+    task.spawn(function()
+        task.wait(0.1)
+        Toggles.Select()
+    end)
+    
+    -- Example Module structure for the Toggles Tab
+    local ExampleSection = Instance.new("Frame", Toggles.Page)
+    ExampleSection.Name = "ModuleSection"
+    ExampleSection.BackgroundColor3 = BrightenColor(Theme.Main, 0.1)
+    ExampleSection.BackgroundTransparency = 0.1
+    ExampleSection.Size = UDim2.new(1, 0, 0, 150)
+    
+    local SectionCorner = Instance.new("UICorner", ExampleSection)
+    SectionCorner.CornerRadius = UDim.new(0, 8)
+    
+    local Title = Instance.new("TextLabel", ExampleSection)
+    Title.Text = "Example Module Section"
+    Title.Font = Enum.Font.GothamBold
+    Title.TextColor3 = Theme.Text
+    Title.TextSize = 14
+    Title.BackgroundTransparency = 1
+    Title.Size = UDim2.new(1, 0, 0, 25)
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.Position = UDim2.new(0, 10, 0, 5)
+    
+    -- The Main UI component table
+    local UI = {
+        Gui = Gui,
+        Container = Container,
+        Blur = Blur,
+        Theme = Theme,
+        Tabs = {Toggles = Toggles.Page, Combat = Combat.Page, Settings = Settings.Page},
+        Modules = {}, -- Where external module creators will add their content
+        Toggle = nil -- Placeholder for toggle function
+    }
+    
+    return UI
+end
+
+-- Return the LumaHub TABLE (contains Load, Notify, and CreateMainUI)
 return LumaHub
