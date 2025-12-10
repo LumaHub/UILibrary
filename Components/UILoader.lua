@@ -6,6 +6,7 @@ local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = Players.LocalPlayer
 local LumaHub = {}
 
+-- Helper function to safely brighten a color by lerping towards white (0-1 range safe)
 local function BrightenColor(color, factor)
     local white = Color3.new(1, 1, 1)
     return color:lerp(white, factor)
@@ -60,6 +61,7 @@ function LumaHub.Load(Settings)
     LumaGui.IgnoreGuiInset = true
     LumaGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     
+    -- Robust parenting for executors (CoreGui/Hidden UI)
     if gethui then
         LumaGui.Parent = gethui()
     elseif syn and syn.protect_gui then 
@@ -69,10 +71,12 @@ function LumaHub.Load(Settings)
         LumaGui.Parent = CoreGui
     end
     
+    -- Blur effect
     local Blur = Instance.new("BlurEffect")
     Blur.Size = 0
     Blur.Parent = game.Workspace.CurrentCamera
     
+    -- Main Background
     local MainBackground = Instance.new("Frame")
     MainBackground.Name = "MainBackground"
     MainBackground.Parent = LumaGui
@@ -94,6 +98,7 @@ function LumaHub.Load(Settings)
     MainStroke.Color = SelectedTheme.Stroke
     MainStroke.Transparency = 1
     
+    -- Animated gradient (using BrightenColor fix)
     local BackgroundGradient = Instance.new("UIGradient")
     BackgroundGradient.Rotation = 45
     BackgroundGradient.Color = ColorSequence.new({
@@ -114,6 +119,7 @@ function LumaHub.Load(Settings)
         end
     end)
     
+    -- Glow effect
     local GlowFrame = Instance.new("Frame")
     GlowFrame.Name = "Glow"
     GlowFrame.Parent = MainBackground
@@ -137,6 +143,7 @@ function LumaHub.Load(Settings)
     ContentContainer.Visible = false
     ContentContainer.ZIndex = 2
     
+    -- Title with shadow
     local TitleShadow = Instance.new("TextLabel")
     TitleShadow.Parent = ContentContainer
     TitleShadow.BackgroundTransparency = 1
@@ -163,6 +170,7 @@ function LumaHub.Load(Settings)
     TitleLabel.TextTransparency = 1
     TitleLabel.ZIndex = 2
     
+    -- Glowing text effect
     local TitleGlow = Instance.new("TextLabel")
     TitleGlow.Parent = ContentContainer
     TitleGlow.BackgroundTransparency = 1
@@ -176,6 +184,7 @@ function LumaHub.Load(Settings)
     TitleGlow.TextTransparency = 0.5
     TitleGlow.ZIndex = 3
     
+    -- Animated loading bar
     local LoadingBarContainer = Instance.new("Frame")
     LoadingBarContainer.Parent = ContentContainer
     LoadingBarContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -204,6 +213,7 @@ function LumaHub.Load(Settings)
     FillCorner.CornerRadius = UDim.new(1, 0)
     FillCorner.Parent = LoadingFill
     
+    -- Gradient on loading bar (using BrightenColor fix)
     local FillGradient = Instance.new("UIGradient")
     FillGradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, SelectedTheme.Accent),
@@ -212,6 +222,7 @@ function LumaHub.Load(Settings)
     })
     FillGradient.Parent = LoadingFill
     
+    -- Shimmer effect
     local shimmerActive = true
     spawn(function()
         while shimmerActive and LoadingFill.Parent do
@@ -228,6 +239,7 @@ function LumaHub.Load(Settings)
         end
     end)
     
+    -- Viewport with better styling
     local ViewportContainer = Instance.new("Frame")
     ViewportContainer.Parent = ContentContainer
     ViewportContainer.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -246,6 +258,7 @@ function LumaHub.Load(Settings)
     ViewportStroke.Color = SelectedTheme.Accent
     ViewportStroke.Transparency = 1
     
+    -- Animated border
     local ViewportGradient = Instance.new("UIGradient")
     ViewportGradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, SelectedTheme.Accent),
@@ -404,6 +417,7 @@ function LumaHub.Load(Settings)
         LoadSound:Play()
     end)
     
+    -- Start animations
     TweenService:Create(Blur, TweenInfo.new(0.5), {Size = 15}):Play()
     
     local OpenTween = TweenService:Create(MainBackground, TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 520, 0, 280)})
@@ -434,6 +448,7 @@ function LumaHub.Load(Settings)
         task.wait(0.15)
     end
     
+    -- Loading stages with better animations
     StatusLabel.Text = "STATUS: Loading Scripts..."
     TweenService:Create(LoadingFill, TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {Size = UDim2.new(0.35, 0, 1, 0)}):Play()
     task.wait(1.2)
@@ -451,12 +466,14 @@ function LumaHub.Load(Settings)
     TweenService:Create(LoadingFill, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)}):Play()
     task.wait(0.8)
     
+    -- Close with blur fade
     TweenService:Create(Blur, TweenInfo.new(0.6), {Size = 0}):Play()
     
     local CloseTween = TweenService:Create(MainBackground, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)})
     CloseTween:Play()
     CloseTween.Completed:Wait()
     
+    -- Cleanup
     gradientActive = false
     shimmerActive = false
     borderActive = false
@@ -470,5 +487,5 @@ function LumaHub.Load(Settings)
     return true
 end
 
--- FIX: Return the LumaHub table so LumaHub.Load(...) can be called correctly.
+-- FIX: Return the LumaHub TABLE so the execution script can correctly index it with .Load
 return LumaHub
