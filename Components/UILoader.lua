@@ -4,7 +4,6 @@ local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 
 local LocalPlayer = Players.LocalPlayer
-local LumaHub = {}
 
 local Themes = {
 	Crimson = {
@@ -37,13 +36,17 @@ local Themes = {
 	}
 }
 
-function LumaHub.Load(Settings)
+local function Load(Settings)
+	Settings = Settings or {}
 	local SelectedTheme = Themes[Settings.Theme] or Themes.Blossom
 	local TitleText = Settings.Title or "LumaHub"
 	
 	local ExecutorName = "Unknown"
 	if identifyexecutor then
-		ExecutorName = identifyexecutor()
+		local success, name = pcall(identifyexecutor)
+		if success then
+			ExecutorName = name
+		end
 	end
 	
 	local LumaGui = Instance.new("ScreenGui")
@@ -98,10 +101,11 @@ function LumaHub.Load(Settings)
 	BackgroundGradient.Parent = MainBackground
 	
 	-- Gradient animation
+	local gradientActive = true
 	spawn(function()
-		while MainBackground.Parent do
+		while gradientActive and MainBackground.Parent do
 			for i = 0, 360, 2 do
-				if not MainBackground.Parent then break end
+				if not gradientActive or not MainBackground.Parent then break end
 				BackgroundGradient.Rotation = i
 				task.wait(0.03)
 			end
@@ -212,15 +216,16 @@ function LumaHub.Load(Settings)
 	FillGradient.Parent = LoadingFill
 	
 	-- Shimmer effect
+	local shimmerActive = true
 	spawn(function()
-		while LoadingFill.Parent do
+		while shimmerActive and LoadingFill.Parent do
 			for i = 0, 1, 0.05 do
-				if not LoadingFill.Parent then break end
+				if not shimmerActive or not LoadingFill.Parent then break end
 				FillGradient.Offset = Vector2.new(i, 0)
 				task.wait(0.03)
 			end
 			for i = 1, 0, -0.05 do
-				if not LoadingFill.Parent then break end
+				if not shimmerActive or not LoadingFill.Parent then break end
 				FillGradient.Offset = Vector2.new(i, 0)
 				task.wait(0.03)
 			end
@@ -255,10 +260,11 @@ function LumaHub.Load(Settings)
 	})
 	ViewportGradient.Parent = ViewportStroke
 	
+	local borderActive = true
 	spawn(function()
-		while ViewportStroke.Parent do
+		while borderActive and ViewportStroke.Parent do
 			for i = 0, 360, 5 do
-				if not ViewportStroke.Parent then break end
+				if not borderActive or not ViewportStroke.Parent then break end
 				ViewportGradient.Rotation = i
 				task.wait(0.03)
 			end
@@ -281,43 +287,46 @@ function LumaHub.Load(Settings)
 	AvatarView.CurrentCamera = Camera
 	
 	-- Clone character and add dance animation
-	local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-	Character.Archivable = true
-	local ClonedChar = Character:Clone()
-	ClonedChar.Parent = WorldModel
-	
-	local RootPart = ClonedChar:WaitForChild("HumanoidRootPart")
-	RootPart.Anchored = true
-	ClonedChar:SetPrimaryPartCFrame(CFrame.new(0, 0, 0))
-	
-	-- Load dance animation (popular dances you can use)
-	local AnimationIds = {
-		"rbxassetid://3333499508", -- Griddy
-		"rbxassetid://3695333486", -- Shoulder Dance
-		"rbxassetid://4265725525", -- Shuffle Dance
-		"rbxassetid://3361276673"  -- Take the L
-	}
-	
-	local Humanoid = ClonedChar:WaitForChild("Humanoid")
-	local Animator = Humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator", Humanoid)
-	
-	local Animation = Instance.new("Animation")
-	Animation.AnimationId = AnimationIds[math.random(1, #AnimationIds)]
-	
-	local AnimTrack = Animator:LoadAnimation(Animation)
-	AnimTrack.Looped = true
-	AnimTrack:Play()
-	
-	-- Dynamic camera movement
-	Camera.CFrame = CFrame.new(Vector3.new(0, 1.5, -5), RootPart.Position + Vector3.new(0, 1, 0))
-	
-	local CameraTime = 0
-	local CameraConn = RunService.RenderStepped:Connect(function(dt)
-		if ClonedChar and ClonedChar.PrimaryPart then
-			CameraTime = CameraTime + dt
-			local Offset = math.sin(CameraTime * 0.5) * 0.3
-			Camera.CFrame = CFrame.new(Vector3.new(Offset, 1.5 + math.sin(CameraTime) * 0.2, -5), RootPart.Position + Vector3.new(0, 1, 0))
-		end
+	local ClonedChar, AnimTrack, CameraConn
+	local success = pcall(function()
+		local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+		Character.Archivable = true
+		ClonedChar = Character:Clone()
+		ClonedChar.Parent = WorldModel
+		
+		local RootPart = ClonedChar:WaitForChild("HumanoidRootPart")
+		RootPart.Anchored = true
+		ClonedChar:SetPrimaryPartCFrame(CFrame.new(0, 0, 0))
+		
+		-- Load dance animation
+		local AnimationIds = {
+			"rbxassetid://3333499508", -- Griddy
+			"rbxassetid://3695333486", -- Shoulder Dance
+			"rbxassetid://4265725525", -- Shuffle Dance
+			"rbxassetid://3361276673"  -- Take the L
+		}
+		
+		local Humanoid = ClonedChar:WaitForChild("Humanoid")
+		local Animator = Humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator", Humanoid)
+		
+		local Animation = Instance.new("Animation")
+		Animation.AnimationId = AnimationIds[math.random(1, #AnimationIds)]
+		
+		AnimTrack = Animator:LoadAnimation(Animation)
+		AnimTrack.Looped = true
+		AnimTrack:Play()
+		
+		-- Dynamic camera movement
+		Camera.CFrame = CFrame.new(Vector3.new(0, 1.5, -5), RootPart.Position + Vector3.new(0, 1, 0))
+		
+		local CameraTime = 0
+		CameraConn = RunService.RenderStepped:Connect(function(dt)
+			if ClonedChar and ClonedChar.PrimaryPart then
+				CameraTime = CameraTime + dt
+				local Offset = math.sin(CameraTime * 0.5) * 0.3
+				Camera.CFrame = CFrame.new(Vector3.new(Offset, 1.5 + math.sin(CameraTime) * 0.2, -5), RootPart.Position + Vector3.new(0, 1, 0))
+			end
+		end)
 	end)
 	
 	-- Info labels with particles
@@ -371,6 +380,7 @@ function LumaHub.Load(Settings)
 	StatusLabel.TextColor3 = SelectedTheme.Accent
 	
 	-- Particles for extra flair
+	local particlesActive = true
 	local function CreateParticles()
 		for i = 1, 15 do
 			local Particle = Instance.new("Frame")
@@ -387,7 +397,7 @@ function LumaHub.Load(Settings)
 			Corner.Parent = Particle
 			
 			spawn(function()
-				while Particle.Parent do
+				while particlesActive and Particle.Parent do
 					local NewPos = UDim2.new(math.random(), 0, math.random(), 0)
 					TweenService:Create(Particle, TweenInfo.new(math.random(2, 4), Enum.EasingStyle.Sine), {Position = NewPos}):Play()
 					task.wait(math.random(2, 4))
@@ -402,7 +412,9 @@ function LumaHub.Load(Settings)
 	LoadSound.Volume = 0.5
 	LoadSound.Parent = LumaGui
 	
-	LoadSound:Play()
+	pcall(function()
+		LoadSound:Play()
+	end)
 	
 	-- Start animations
 	TweenService:Create(Blur, TweenInfo.new(0.5), {Size = 15}):Play()
@@ -460,6 +472,12 @@ function LumaHub.Load(Settings)
 	CloseTween:Play()
 	CloseTween.Completed:Wait()
 	
+	-- Cleanup
+	gradientActive = false
+	shimmerActive = false
+	borderActive = false
+	particlesActive = false
+	
 	if CameraConn then CameraConn:Disconnect() end
 	if AnimTrack then AnimTrack:Stop() end
 	Blur:Destroy()
@@ -468,4 +486,5 @@ function LumaHub.Load(Settings)
 	return true
 end
 
-return LumaHub
+-- Direct execution support
+return Load
