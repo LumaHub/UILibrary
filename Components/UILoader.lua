@@ -95,7 +95,11 @@ local function Load(Settings)
 	BackgroundGradient.Rotation = 45
 	BackgroundGradient.Color = ColorSequence.new({
 		ColorSequenceKeypoint.new(0, SelectedTheme.Main),
-		ColorSequenceKeypoint.new(0.5, Color3.new(SelectedTheme.Main.R * 1.3, SelectedTheme.Main.G * 1.3, SelectedTheme.Main.B * 1.3)),
+		ColorSequenceKeypoint.new(0.5, Color3.new(
+			math.min(SelectedTheme.Main.R * 1.3, 1),
+			math.min(SelectedTheme.Main.G * 1.3, 1),
+			math.min(SelectedTheme.Main.B * 1.3, 1)
+		)),
 		ColorSequenceKeypoint.new(1, SelectedTheme.Main)
 	})
 	BackgroundGradient.Parent = MainBackground
@@ -210,7 +214,11 @@ local function Load(Settings)
 	local FillGradient = Instance.new("UIGradient")
 	FillGradient.Color = ColorSequence.new({
 		ColorSequenceKeypoint.new(0, SelectedTheme.Accent),
-		ColorSequenceKeypoint.new(0.5, Color3.new(SelectedTheme.Accent.R * 1.5, SelectedTheme.Accent.G * 1.5, SelectedTheme.Accent.B * 1.5)),
+		ColorSequenceKeypoint.new(0.5, Color3.new(
+			math.min(SelectedTheme.Accent.R * 1.5, 1),
+			math.min(SelectedTheme.Accent.G * 1.5, 1),
+			math.min(SelectedTheme.Accent.B * 1.5, 1)
+		)),
 		ColorSequenceKeypoint.new(1, SelectedTheme.Accent)
 	})
 	FillGradient.Parent = LoadingFill
