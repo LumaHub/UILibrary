@@ -6,13 +6,11 @@ local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = Players.LocalPlayer
 local LumaHub = {}
 
--- Safely creates a slightly brighter color (lerps toward pure white)
 local function BrightenColor(color, factor)
     local white = Color3.new(1, 1, 1)
     return color:lerp(white, factor)
 end
 
--- Re-organized Themes to include the LumaHub table for clean return
 local Themes = {
     Crimson = {
         Main = Color3.fromRGB(20, 20, 20),
@@ -71,12 +69,10 @@ function LumaHub.Load(Settings)
         LumaGui.Parent = CoreGui
     end
     
-    -- Blur effect
     local Blur = Instance.new("BlurEffect")
     Blur.Size = 0
     Blur.Parent = game.Workspace.CurrentCamera
     
-    -- Main Background
     local MainBackground = Instance.new("Frame")
     MainBackground.Name = "MainBackground"
     MainBackground.Parent = LumaGui
@@ -98,17 +94,15 @@ function LumaHub.Load(Settings)
     MainStroke.Color = SelectedTheme.Stroke
     MainStroke.Transparency = 1
     
-    -- Animated gradient (FIXED line 147)
     local BackgroundGradient = Instance.new("UIGradient")
     BackgroundGradient.Rotation = 45
     BackgroundGradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, SelectedTheme.Main),
-        ColorSequenceKeypoint.new(0.5, BrightenColor(SelectedTheme.Main, 0.15)), -- Safely brightens the main color
+        ColorSequenceKeypoint.new(0.5, BrightenColor(SelectedTheme.Main, 0.15)), 
         ColorSequenceKeypoint.new(1, SelectedTheme.Main)
     })
     BackgroundGradient.Parent = MainBackground
     
-    -- Gradient animation
     local gradientActive = true
     spawn(function()
         while gradientActive and MainBackground.Parent do
@@ -120,7 +114,6 @@ function LumaHub.Load(Settings)
         end
     end)
     
-    -- Glow effect
     local GlowFrame = Instance.new("Frame")
     GlowFrame.Name = "Glow"
     GlowFrame.Parent = MainBackground
@@ -144,7 +137,6 @@ function LumaHub.Load(Settings)
     ContentContainer.Visible = false
     ContentContainer.ZIndex = 2
     
-    -- Title with shadow
     local TitleShadow = Instance.new("TextLabel")
     TitleShadow.Parent = ContentContainer
     TitleShadow.BackgroundTransparency = 1
@@ -171,7 +163,6 @@ function LumaHub.Load(Settings)
     TitleLabel.TextTransparency = 1
     TitleLabel.ZIndex = 2
     
-    -- Glowing text effect
     local TitleGlow = Instance.new("TextLabel")
     TitleGlow.Parent = ContentContainer
     TitleGlow.BackgroundTransparency = 1
@@ -185,7 +176,6 @@ function LumaHub.Load(Settings)
     TitleGlow.TextTransparency = 0.5
     TitleGlow.ZIndex = 3
     
-    -- Animated loading bar
     local LoadingBarContainer = Instance.new("Frame")
     LoadingBarContainer.Parent = ContentContainer
     LoadingBarContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -214,16 +204,14 @@ function LumaHub.Load(Settings)
     FillCorner.CornerRadius = UDim.new(1, 0)
     FillCorner.Parent = LoadingFill
     
-    -- Gradient on loading bar (FIXED line 211)
     local FillGradient = Instance.new("UIGradient")
     FillGradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, SelectedTheme.Accent),
-        ColorSequenceKeypoint.new(0.5, BrightenColor(SelectedTheme.Accent, 0.1)), -- Safely brightens the accent color
+        ColorSequenceKeypoint.new(0.5, BrightenColor(SelectedTheme.Accent, 0.1)), 
         ColorSequenceKeypoint.new(1, SelectedTheme.Accent)
     })
     FillGradient.Parent = LoadingFill
     
-    -- Shimmer effect
     local shimmerActive = true
     spawn(function()
         while shimmerActive and LoadingFill.Parent do
@@ -240,7 +228,6 @@ function LumaHub.Load(Settings)
         end
     end)
     
-    -- Viewport with better styling
     local ViewportContainer = Instance.new("Frame")
     ViewportContainer.Parent = ContentContainer
     ViewportContainer.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -259,7 +246,6 @@ function LumaHub.Load(Settings)
     ViewportStroke.Color = SelectedTheme.Accent
     ViewportStroke.Transparency = 1
     
-    -- Animated border
     local ViewportGradient = Instance.new("UIGradient")
     ViewportGradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, SelectedTheme.Accent),
@@ -294,7 +280,6 @@ function LumaHub.Load(Settings)
     Camera.Parent = AvatarView
     AvatarView.CurrentCamera = Camera
     
-    -- Clone character and add dance animation
     local ClonedChar, AnimTrack, CameraConn
     local success = pcall(function()
         local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
@@ -306,12 +291,11 @@ function LumaHub.Load(Settings)
         RootPart.Anchored = true
         ClonedChar:SetPrimaryPartCFrame(CFrame.new(0, 0, 0))
         
-        -- Load dance animation
         local AnimationIds = {
-            "rbxassetid://3333499508", -- Griddy
-            "rbxassetid://3695333486", -- Shoulder Dance
-            "rbxassetid://4265725525", -- Shuffle Dance
-            "rbxassetid://3361276673"  -- Take the L
+            "rbxassetid://3333499508", 
+            "rbxassetid://3695333486", 
+            "rbxassetid://4265725525", 
+            "rbxassetid://3361276673"
         }
         
         local Humanoid = ClonedChar:WaitForChild("Humanoid")
@@ -324,7 +308,6 @@ function LumaHub.Load(Settings)
         AnimTrack.Looped = true
         AnimTrack:Play()
         
-        -- Dynamic camera movement
         Camera.CFrame = CFrame.new(Vector3.new(0, 1.5, -5), RootPart.Position + Vector3.new(0, 1, 0))
         
         local CameraTime = 0
@@ -337,7 +320,6 @@ function LumaHub.Load(Settings)
         end)
     end)
     
-    -- Info labels with particles
     local InfoFrame = Instance.new("Frame")
     InfoFrame.Parent = ContentContainer
     InfoFrame.BackgroundTransparency = 1
@@ -387,7 +369,6 @@ function LumaHub.Load(Settings)
     local StatusLabel = CreateInfoLabel("STATUS: Initializing...", 4)
     StatusLabel.TextColor3 = SelectedTheme.Accent
     
-    -- Particles for extra flair
     local particlesActive = true
     local function CreateParticles()
         for i = 1, 15 do
@@ -414,7 +395,6 @@ function LumaHub.Load(Settings)
         end
     end
     
-    -- Sound
     local LoadSound = Instance.new("Sound")
     LoadSound.SoundId = "rbxassetid://6895079853"
     LoadSound.Volume = 0.5
@@ -424,7 +404,6 @@ function LumaHub.Load(Settings)
         LoadSound:Play()
     end)
     
-    -- Start animations
     TweenService:Create(Blur, TweenInfo.new(0.5), {Size = 15}):Play()
     
     local OpenTween = TweenService:Create(MainBackground, TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 520, 0, 280)})
@@ -455,7 +434,6 @@ function LumaHub.Load(Settings)
         task.wait(0.15)
     end
     
-    -- Loading stages with better animations
     StatusLabel.Text = "STATUS: Loading Scripts..."
     TweenService:Create(LoadingFill, TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {Size = UDim2.new(0.35, 0, 1, 0)}):Play()
     task.wait(1.2)
@@ -473,14 +451,12 @@ function LumaHub.Load(Settings)
     TweenService:Create(LoadingFill, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)}):Play()
     task.wait(0.8)
     
-    -- Close with blur fade
     TweenService:Create(Blur, TweenInfo.new(0.6), {Size = 0}):Play()
     
     local CloseTween = TweenService:Create(MainBackground, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)})
     CloseTween:Play()
     CloseTween.Completed:Wait()
     
-    -- Cleanup
     gradientActive = false
     shimmerActive = false
     borderActive = false
@@ -494,5 +470,5 @@ function LumaHub.Load(Settings)
     return true
 end
 
--- Direct execution support (for loadstring)
+-- FIX: Return the LumaHub table so LumaHub.Load(...) can be called correctly.
 return LumaHub
