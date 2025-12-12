@@ -14,6 +14,9 @@ function Library:CreateWindow(Settings)
     local SubTitleText = Settings.Subtitle or "Interface"
     local AccentColor = Settings.Accent or Color3.fromRGB(80, 120, 255)
     
+    local isMinimized = false
+    local isSidebarExpanded = true
+
     local gui = Instance.new("ScreenGui")
     gui.Name = "LumaLibrary"
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -30,7 +33,7 @@ function Library:CreateWindow(Settings)
 
     local mainFrame = Instance.new("Frame")
     mainFrame.Name = "MainFrame"
-    mainFrame.Size = UDim2.new(0, 0, 0, 0)
+    mainFrame.Size = UDim2.new(0, 750, 0, 450)
     mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
     mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
     mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
@@ -47,9 +50,76 @@ function Library:CreateWindow(Settings)
     mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     mainStroke.Parent = mainFrame
 
+    -- Main Content Area (Background)
+    local contentArea = Instance.new("Frame")
+    contentArea.Name = "ContentArea"
+    contentArea.Size = UDim2.new(1, -50, 1, 0)
+    contentArea.Position = UDim2.new(0, 50, 0, 0)
+    contentArea.BackgroundTransparency = 1
+    contentArea.ClipsDescendants = true
+    contentArea.Parent = mainFrame
+
+    -- Title Bar for Dragging and Controls
+    local titleBar = Instance.new("Frame")
+    titleBar.Name = "TitleBar"
+    titleBar.Size = UDim2.new(1, 0, 0, 30)
+    titleBar.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+    titleBar.ZIndex = 3
+    titleBar.Parent = mainFrame
+    
+    local titleBarLabel = Instance.new("TextLabel")
+    titleBarLabel.Name = "Title"
+    titleBarLabel.Size = UDim2.new(1, -100, 1, 0)
+    titleBarLabel.Position = UDim2.new(0, 50, 0, 0)
+    titleBarLabel.BackgroundTransparency = 1
+    titleBarLabel.Text = TitleText .. " - " .. SubTitleText
+    titleBarLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
+    titleBarLabel.TextSize = 14
+    titleBarLabel.Font = Enum.Font.GothamMedium
+    titleBarLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleBarLabel.Parent = titleBar
+
+    -- Control Buttons
+    local function createControlButton(name, icon, position, color, callback)
+        local button = Instance.new("ImageButton")
+        button.Name = name
+        button.Size = UDim2.new(0, 30, 0, 30)
+        button.Position = position
+        button.BackgroundTransparency = 1
+        button.Image = icon
+        button.ImageColor3 = color
+        button.ImageTransparency = 0.3
+        button.Parent = titleBar
+        button.MouseEnter:Connect(function() TweenService:Create(button, TweenInfo.new(0.1), {ImageTransparency = 0}):Play() end)
+        button.MouseLeave:Connect(function() TweenService:Create(button, TweenInfo.new(0.1), {ImageTransparency = 0.3}):Play() end)
+        button.MouseButton1Click:Connect(callback)
+        return button
+    end
+
+    local function toggleMinimize()
+        isMinimized = not isMinimized
+        local sizeGoal = isMinimized and UDim2.new(0, 350, 0, 30) or UDim2.new(0, 750, 0, 450)
+        local icon = isMinimized and "rbxassetid://3926306509" or "rbxassetid://3926306168" -- Square or Minus
+        
+        TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = sizeGoal}):Play()
+        TweenService:Create(contentArea, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {CanvasGroupTransparency = isMinimized and 1 or 0}):Play()
+        
+        minimizeButton.Image = icon
+    end
+
+    local closeButton = createControlButton("CloseButton", "rbxassetid://3926305904", UDim2.new(1, -30, 0, 0), Color3.fromRGB(255, 80, 80), function()
+        TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {CanvasGroupTransparency = 1}):Play()
+        task.wait(0.4)
+        gui:Destroy()
+    end)
+    closeButton.ImageTransparency = 0.1
+    
+    local minimizeButton = createControlButton("MinimizeButton", "rbxassetid://3926306168", UDim2.new(1, -60, 0, 0), Color3.fromRGB(255, 255, 255), toggleMinimize)
+
+    -- Sidebar Implementation
     local sidebar = Instance.new("Frame")
     sidebar.Name = "Sidebar"
-    sidebar.Size = UDim2.new(0, 200, 1, 0)
+    sidebar.Size = UDim2.new(0, 50, 1, 0) -- Starts small
     sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
     sidebar.BorderSizePixel = 0
     sidebar.ZIndex = 2
@@ -58,14 +128,6 @@ function Library:CreateWindow(Settings)
     local sidebarCorner = Instance.new("UICorner")
     sidebarCorner.CornerRadius = UDim.new(0, 12)
     sidebarCorner.Parent = sidebar
-
-    local sidebarFix = Instance.new("Frame")
-    sidebarFix.Name = "SquareFix"
-    sidebarFix.Size = UDim2.new(0, 10, 1, 0)
-    sidebarFix.Position = UDim2.new(1, -10, 0, 0)
-    sidebarFix.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
-    sidebarFix.BorderSizePixel = 0
-    sidebarFix.Parent = sidebar
 
     local sidebarDivider = Instance.new("Frame")
     sidebarDivider.Name = "Divider"
@@ -81,17 +143,17 @@ function Library:CreateWindow(Settings)
     titleContainer.BackgroundTransparency = 1
     titleContainer.Parent = sidebar
 
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Name = "Title"
-    titleLabel.Size = UDim2.new(1, -30, 0, 30)
-    titleLabel.Position = UDim2.new(0, 15, 0, 15)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = TitleText
-    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLabel.TextSize = 22
-    titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Parent = titleContainer
+    local titleLabelSidebar = Instance.new("TextLabel")
+    titleLabelSidebar.Name = "Title"
+    titleLabelSidebar.Size = UDim2.new(1, -30, 0, 30)
+    titleLabelSidebar.Position = UDim2.new(0, 15, 0, 15)
+    titleLabelSidebar.BackgroundTransparency = 1
+    titleLabelSidebar.Text = TitleText
+    titleLabelSidebar.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabelSidebar.TextSize = 22
+    titleLabelSidebar.Font = Enum.Font.GothamBold
+    titleLabelSidebar.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabelSidebar.Parent = titleContainer
 
     local subLabel = Instance.new("TextLabel")
     subLabel.Name = "Subtitle"
@@ -104,6 +166,32 @@ function Library:CreateWindow(Settings)
     subLabel.Font = Enum.Font.GothamMedium
     subLabel.TextXAlignment = Enum.TextXAlignment.Left
     subLabel.Parent = titleContainer
+    
+    local function setSidebarTextTransparency(transparency)
+        TweenService:Create(titleLabelSidebar, TweenInfo.new(0.3), {TextTransparency = transparency}):Play()
+        TweenService:Create(subLabel, TweenInfo.new(0.3), {TextTransparency = transparency}):Play()
+    end
+
+    local function expandSidebar()
+        if isSidebarExpanded then return end
+        isSidebarExpanded = true
+        TweenService:Create(sidebar, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 200, 1, 0)}):Play()
+        TweenService:Create(contentArea, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Position = UDim2.new(0, 200, 0, 0), Size = UDim2.new(1, -200, 1, 0)}):Play()
+        setSidebarTextTransparency(0)
+    end
+
+    local function collapseSidebar()
+        if not isSidebarExpanded then return end
+        isSidebarExpanded = false
+        setSidebarTextTransparency(1)
+        TweenService:Create(sidebar, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 50, 1, 0)}):Play()
+        TweenService:Create(contentArea, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Position = UDim2.new(0, 50, 0, 0), Size = UDim2.new(1, -50, 1, 0)}):Play()
+    end
+    
+    sidebar.MouseEnter:Connect(expandSidebar)
+    sidebar.MouseLeave:Connect(collapseSidebar)
+    
+    collapseSidebar()
 
     local tabContainer = Instance.new("ScrollingFrame")
     tabContainer.Name = "TabContainer"
@@ -125,16 +213,8 @@ function Library:CreateWindow(Settings)
     tabPadding.PaddingRight = UDim.new(0, 10)
     tabPadding.Parent = tabContainer
 
-    local contentArea = Instance.new("Frame")
-    contentArea.Name = "ContentArea"
-    contentArea.Size = UDim2.new(1, -200, 1, 0)
-    contentArea.Position = UDim2.new(0, 200, 0, 0)
-    contentArea.BackgroundTransparency = 1
-    contentArea.ClipsDescendants = true
-    contentArea.Parent = mainFrame
-
+    -- Dragging Logic (Using TitleBar/Sidebar)
     local dragging
-    local dragInput
     local dragStart
     local startPos
 
@@ -143,12 +223,11 @@ function Library:CreateWindow(Settings)
         mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 
-    sidebar.InputBegan:Connect(function(input)
+    titleBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             dragStart = input.Position
             startPos = mainFrame.Position
-            
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
@@ -157,21 +236,11 @@ function Library:CreateWindow(Settings)
         end
     end)
 
-    sidebar.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            dragInput = input
-        end
-    end)
-
     UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             update(input)
         end
     end)
-
-    TweenService:Create(mainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 750, 0, 450)
-    }):Play()
 
     local tabs = {}
     local firstTab = true
@@ -186,6 +255,7 @@ function Library:CreateWindow(Settings)
         tabButton.BackgroundTransparency = 1
         tabButton.Text = ""
         tabButton.AutoButtonColor = false
+        tabButton.LayoutOrder = #tabs + 1 -- Alignment fix
         tabButton.Parent = tabContainer
 
         local btnCorner = Instance.new("UICorner")
@@ -209,12 +279,14 @@ function Library:CreateWindow(Settings)
             btnTitle.Size = UDim2.new(1, -40, 1, 0)
             
             local iconImg = Instance.new("ImageLabel")
+            iconImg.Name = "Icon"
             iconImg.Size = UDim2.new(0, 20, 0, 20)
             iconImg.Position = UDim2.new(0, 8, 0.5, -10)
             iconImg.BackgroundTransparency = 1
             iconImg.Image = icon
             iconImg.ImageColor3 = Color3.fromRGB(150, 150, 160)
             iconImg.Parent = tabButton
+            tab.Icon = iconImg
         end
 
         local page = Instance.new("ScrollingFrame")
@@ -238,8 +310,13 @@ function Library:CreateWindow(Settings)
         pageLayout.SortOrder = Enum.SortOrder.LayoutOrder
         pageLayout.Padding = UDim.new(0, 10)
         pageLayout.Parent = page
+        
+        tab.Page = page
+        tab.Button = tabButton
+        tab.BtnTitle = btnTitle
 
         local function Activate()
+            if isMinimized then return end 
             for _, t in pairs(tabs) do
                 TweenService:Create(t.BtnTitle, TweenInfo.new(0.3), {TextColor3 = Color3.fromRGB(150, 150, 160)}):Play()
                 TweenService:Create(t.Button, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
@@ -250,9 +327,9 @@ function Library:CreateWindow(Settings)
             end
             
             TweenService:Create(btnTitle, TweenInfo.new(0.3), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-            TweenService:Create(tabButton, TweenInfo.new(0.3), {BackgroundTransparency = 0.95}):Play()
-            if icon then
-                TweenService:Create(tabButton:FindFirstChild("ImageLabel"), TweenInfo.new(0.3), {ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+            TweenService:Create(tabButton, TweenInfo.new(0.3), {BackgroundTransparency = 0.95, BackgroundColor3 = Color3.fromRGB(30, 30, 40)}):Play()
+            if tab.Icon then
+                TweenService:Create(tab.Icon, TweenInfo.new(0.3), {ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
             end
             
             page.Visible = true
@@ -274,23 +351,20 @@ function Library:CreateWindow(Settings)
             Activate()
         end
         
-        table.insert(tabs, {
-            Button = tabButton,
-            BtnTitle = btnTitle,
-            Icon = tabButton:FindFirstChild("ImageLabel"),
-            Page = page
-        })
+        table.insert(tabs, tab)
         
         return tab
     end
 
     function Window:CreateInfoTab()
         local infoTab = Window:CreateTab("Information", "rbxassetid://3926305904")
-        local page = infoTab.Page.Parent:FindFirstChild("InformationPage")
+        local page = infoTab.Page
         
+        -- Use a Frame to contain the elements and set its height for UIListLayout
         local container = Instance.new("Frame")
-        container.Size = UDim2.new(1, 0, 0, 300)
+        container.Size = UDim2.new(1, 0, 0, 300) 
         container.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+        container.BorderSizePixel = 0
         container.Parent = page
         
         local cCorner = Instance.new("UICorner")
@@ -322,7 +396,9 @@ function Library:CreateWindow(Settings)
             t1.Completed:Wait()
             t2:Play()
             t2.Completed:Wait()
-            animateGlow()
+            if imageGlow.Parent then -- Stop if the UI is closed
+                animateGlow()
+            end
         end
         task.spawn(animateGlow)
         
@@ -358,7 +434,7 @@ function Library:CreateWindow(Settings)
         local descText = "This UI library was made by revin for LumaHub mainly used to design our scripts and use our custom ui library instead of relying to different ones like Rayfield. You can also use it, if you'd like to."
         
         local descLabel = Instance.new("TextLabel")
-        descLabel.Size = UDim2.new(1, -40, 0, 100)
+        descLabel.Size = UDim2.new(1, -40, 0, 80) -- Adjusted height to fit text
         descLabel.Position = UDim2.new(0.5, 0, 0, 180)
         descLabel.AnchorPoint = Vector2.new(0.5, 0)
         descLabel.BackgroundTransparency = 1
@@ -373,7 +449,12 @@ function Library:CreateWindow(Settings)
         
         return infoTab
     end
-
+    
+    function Window:Destroy()
+        -- Ensure the close button logic is used for clean shutdown
+        closeButton.MouseButton1Click:Fire() 
+    end
+    
     return Window
 end
 
