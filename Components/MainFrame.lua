@@ -15,7 +15,7 @@ function Library:CreateWindow(Settings)
     local AccentColor = Settings.Accent or Color3.fromRGB(80, 120, 255)
     
     local isMinimized = false
-    local isSidebarExpanded = true
+    local isSidebarExpanded = false -- Start collapsed
 
     local gui = Instance.new("ScreenGui")
     gui.Name = "LumaLibrary"
@@ -39,6 +39,7 @@ function Library:CreateWindow(Settings)
     mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
     mainFrame.ClipsDescendants = true
     mainFrame.Parent = gui
+    mainFrame.CanvasGroupTransparency = 1 -- Start transparent for animation
 
     local mainCorner = Instance.new("UICorner")
     mainCorner.CornerRadius = UDim.new(0, 12)
@@ -49,15 +50,11 @@ function Library:CreateWindow(Settings)
     mainStroke.Thickness = 1
     mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     mainStroke.Parent = mainFrame
-
-    -- Main Content Area (Background)
-    local contentArea = Instance.new("Frame")
-    contentArea.Name = "ContentArea"
-    contentArea.Size = UDim2.new(1, -50, 1, 0)
-    contentArea.Position = UDim2.new(0, 50, 0, 0)
-    contentArea.BackgroundTransparency = 1
-    contentArea.ClipsDescendants = true
-    contentArea.Parent = mainFrame
+    
+    -- Animate the frame opening after the loader finishes
+    TweenService:Create(mainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+        CanvasGroupTransparency = 0
+    }):Play()
 
     -- Title Bar for Dragging and Controls
     local titleBar = Instance.new("Frame")
@@ -95,14 +92,17 @@ function Library:CreateWindow(Settings)
         button.MouseButton1Click:Connect(callback)
         return button
     end
-
+    
+    local fullSize = UDim2.new(0, 750, 0, 450)
+    local minSize = UDim2.new(0, 350, 0, 30)
     local function toggleMinimize()
         isMinimized = not isMinimized
-        local sizeGoal = isMinimized and UDim2.new(0, 350, 0, 30) or UDim2.new(0, 750, 0, 450)
-        local icon = isMinimized and "rbxassetid://3926306509" or "rbxassetid://3926306168" -- Square or Minus
+        local sizeGoal = isMinimized and minSize or fullSize
+        local icon = isMinimized and "rbxassetid://3926306509" or "rbxassetid://3926306168" -- Restore or Minimize
         
         TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = sizeGoal}):Play()
         TweenService:Create(contentArea, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {CanvasGroupTransparency = isMinimized and 1 or 0}):Play()
+        TweenService:Create(sidebar, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {CanvasGroupTransparency = isMinimized and 1 or 0}):Play()
         
         minimizeButton.Image = icon
     end
@@ -124,7 +124,16 @@ function Library:CreateWindow(Settings)
     sidebar.BorderSizePixel = 0
     sidebar.ZIndex = 2
     sidebar.Parent = mainFrame
-
+    
+    -- Content Area
+    local contentArea = Instance.new("Frame")
+    contentArea.Name = "ContentArea"
+    contentArea.Size = UDim2.new(1, -50, 1, 0)
+    contentArea.Position = UDim2.new(0, 50, 0, 0)
+    contentArea.BackgroundTransparency = 1
+    contentArea.ClipsDescendants = true
+    contentArea.Parent = mainFrame
+    
     local sidebarCorner = Instance.new("UICorner")
     sidebarCorner.CornerRadius = UDim.new(0, 12)
     sidebarCorner.Parent = sidebar
@@ -168,12 +177,13 @@ function Library:CreateWindow(Settings)
     subLabel.Parent = titleContainer
     
     local function setSidebarTextTransparency(transparency)
+        -- Animate Title and Subtitle text appearance/disappearance
         TweenService:Create(titleLabelSidebar, TweenInfo.new(0.3), {TextTransparency = transparency}):Play()
         TweenService:Create(subLabel, TweenInfo.new(0.3), {TextTransparency = transparency}):Play()
     end
 
     local function expandSidebar()
-        if isSidebarExpanded then return end
+        if isMinimized or isSidebarExpanded then return end
         isSidebarExpanded = true
         TweenService:Create(sidebar, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 200, 1, 0)}):Play()
         TweenService:Create(contentArea, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Position = UDim2.new(0, 200, 0, 0), Size = UDim2.new(1, -200, 1, 0)}):Play()
@@ -181,17 +191,16 @@ function Library:CreateWindow(Settings)
     end
 
     local function collapseSidebar()
-        if not isSidebarExpanded then return end
+        if isMinimized or not isSidebarExpanded then return end
         isSidebarExpanded = false
         setSidebarTextTransparency(1)
         TweenService:Create(sidebar, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 50, 1, 0)}):Play()
         TweenService:Create(contentArea, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Position = UDim2.new(0, 50, 0, 0), Size = UDim2.new(1, -50, 1, 0)}):Play()
     end
     
+    setSidebarTextTransparency(1)
     sidebar.MouseEnter:Connect(expandSidebar)
     sidebar.MouseLeave:Connect(collapseSidebar)
-    
-    collapseSidebar()
 
     local tabContainer = Instance.new("ScrollingFrame")
     tabContainer.Name = "TabContainer"
@@ -213,7 +222,7 @@ function Library:CreateWindow(Settings)
     tabPadding.PaddingRight = UDim.new(0, 10)
     tabPadding.Parent = tabContainer
 
-    -- Dragging Logic (Using TitleBar/Sidebar)
+    -- Dragging Logic (Using TitleBar)
     local dragging
     local dragStart
     local startPos
@@ -255,7 +264,7 @@ function Library:CreateWindow(Settings)
         tabButton.BackgroundTransparency = 1
         tabButton.Text = ""
         tabButton.AutoButtonColor = false
-        tabButton.LayoutOrder = #tabs + 1 -- Alignment fix
+        tabButton.LayoutOrder = #tabs + 1 
         tabButton.Parent = tabContainer
 
         local btnCorner = Instance.new("UICorner")
@@ -319,7 +328,7 @@ function Library:CreateWindow(Settings)
             if isMinimized then return end 
             for _, t in pairs(tabs) do
                 TweenService:Create(t.BtnTitle, TweenInfo.new(0.3), {TextColor3 = Color3.fromRGB(150, 150, 160)}):Play()
-                TweenService:Create(t.Button, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
+                TweenService:Create(t.Button, TweenInfo.new(0.3), {BackgroundTransparency = 1, BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
                 if t.Icon then
                     TweenService:Create(t.Icon, TweenInfo.new(0.3), {ImageColor3 = Color3.fromRGB(150, 150, 160)}):Play()
                 end
@@ -335,6 +344,7 @@ function Library:CreateWindow(Settings)
             page.Visible = true
             page.CanvasPosition = Vector2.new(0,0)
             
+            -- Fade-in animation for the page content
             page.Position = UDim2.new(0, 0, 0, 10)
             page.CanvasGroupTransparency = 1
             
@@ -353,14 +363,18 @@ function Library:CreateWindow(Settings)
         
         table.insert(tabs, tab)
         
-        return tab
+        -- Return the tab for easy element creation later
+        local TabAPI = {}
+        TabAPI.Page = page
+        return TabAPI
     end
 
     function Window:CreateInfoTab()
+        -- Use an icon for information (rbxassetid://3926305904 is a common one, but using another for variety/professional look)
         local infoTab = Window:CreateTab("Information", "rbxassetid://3926305904")
         local page = infoTab.Page
         
-        -- Use a Frame to contain the elements and set its height for UIListLayout
+        -- Frame container for Info content, sized for the UIListLayout
         local container = Instance.new("Frame")
         container.Size = UDim2.new(1, 0, 0, 300) 
         container.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
@@ -377,8 +391,10 @@ function Library:CreateWindow(Settings)
         cStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
         cStroke.Parent = container
         
+        -- Texture ID from screenshot: 125073427434619
         local assetId = "rbxassetid://125073427434619"
         
+        -- 1. Animated Glow Background
         local imageGlow = Instance.new("ImageLabel")
         imageGlow.Size = UDim2.new(0, 110, 0, 110)
         imageGlow.Position = UDim2.new(0.5, 0, 0, 30)
@@ -390,18 +406,20 @@ function Library:CreateWindow(Settings)
         imageGlow.Parent = container
         
         local function animateGlow()
+            -- Slight pulsing glow animation
             local t1 = TweenService:Create(imageGlow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Size = UDim2.new(0, 120, 0, 120), ImageTransparency = 0.7})
             local t2 = TweenService:Create(imageGlow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Size = UDim2.new(0, 110, 0, 110), ImageTransparency = 0.6})
             t1:Play()
             t1.Completed:Wait()
             t2:Play()
             t2.Completed:Wait()
-            if imageGlow.Parent then -- Stop if the UI is closed
+            if imageGlow.Parent then 
                 animateGlow()
             end
         end
         task.spawn(animateGlow)
         
+        -- 2. Main Logo Image (Good Looking Start)
         local mainImage = Instance.new("ImageLabel")
         mainImage.Size = UDim2.new(0, 100, 0, 100)
         mainImage.Position = UDim2.new(0.5, 0, 0, 35)
@@ -414,6 +432,7 @@ function Library:CreateWindow(Settings)
         imgCorner.CornerRadius = UDim.new(1, 0)
         imgCorner.Parent = mainImage
         
+        -- 3. Title/Branding Text
         local devTitle = Instance.new("TextLabel")
         devTitle.Size = UDim2.new(1, 0, 0, 30)
         devTitle.Position = UDim2.new(0, 0, 0, 145)
@@ -424,6 +443,7 @@ function Library:CreateWindow(Settings)
         devTitle.Font = Enum.Font.GothamBold
         devTitle.Parent = container
         
+        -- Gradient effect on the title text
         local grad = Instance.new("UIGradient")
         grad.Color = ColorSequence.new{
             ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
@@ -431,10 +451,11 @@ function Library:CreateWindow(Settings)
         }
         grad.Parent = devTitle
         
+        -- 4. Description Text (Modern Professional)
         local descText = "This UI library was made by revin for LumaHub mainly used to design our scripts and use our custom ui library instead of relying to different ones like Rayfield. You can also use it, if you'd like to."
         
         local descLabel = Instance.new("TextLabel")
-        descLabel.Size = UDim2.new(1, -40, 0, 80) -- Adjusted height to fit text
+        descLabel.Size = UDim2.new(1, -40, 0, 80) 
         descLabel.Position = UDim2.new(0.5, 0, 0, 180)
         descLabel.AnchorPoint = Vector2.new(0.5, 0)
         descLabel.BackgroundTransparency = 1
@@ -448,11 +469,6 @@ function Library:CreateWindow(Settings)
         descLabel.Parent = container
         
         return infoTab
-    end
-    
-    function Window:Destroy()
-        -- Ensure the close button logic is used for clean shutdown
-        closeButton.MouseButton1Click:Fire() 
     end
     
     return Window
