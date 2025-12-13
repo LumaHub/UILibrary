@@ -83,142 +83,166 @@ function Loader.Load(settings)
     mainContainer.ZIndex = 4
     mainContainer.Parent = screenGui
 
-    local dockContainer = Instance.new("Frame")
-    dockContainer.Name = "DockContainer"
-    dockContainer.Size = UDim2.new(0, 0, 0, 80)
-    dockContainer.Position = UDim2.new(0.5, 0, 0, -100)
-    dockContainer.AnchorPoint = Vector2.new(0.5, 1)
-    dockContainer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    dockContainer.BackgroundTransparency = 0.3
-    dockContainer.BorderSizePixel = 0
-    dockContainer.ZIndex = 10
-    dockContainer.Parent = mainContainer
+    local dockContainer
+    if discordEnabled or youtubeEnabled then
+        dockContainer = Instance.new("Frame")
+        dockContainer.Name = "DockContainer"
+        dockContainer.Size = UDim2.new(0, 0, 0, 70)
+        dockContainer.Position = UDim2.new(0.5, 0, 0, -90)
+        dockContainer.AnchorPoint = Vector2.new(0.5, 1)
+        dockContainer.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
+        dockContainer.BorderSizePixel = 0
+        dockContainer.ZIndex = 10
+        dockContainer.Parent = mainContainer
 
-    local dockCorner = Instance.new("UICorner")
-    dockCorner.CornerRadius = UDim.new(0, 20)
-    dockCorner.Parent = dockContainer
+        local dockCorner = Instance.new("UICorner")
+        dockCorner.CornerRadius = UDim.new(0, 16)
+        dockCorner.Parent = dockContainer
 
-    local dockStroke = Instance.new("UIStroke")
-    dockStroke.Color = Color3.fromRGB(255, 255, 255)
-    dockStroke.Thickness = 1
-    dockStroke.Transparency = 0.7
-    dockStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    dockStroke.Parent = dockContainer
+        local dockStroke = Instance.new("UIStroke")
+        dockStroke.Color = Color3.fromRGB(35, 35, 45)
+        dockStroke.Thickness = 1
+        dockStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        dockStroke.Parent = dockContainer
 
-    local dockBlur = Instance.new("Frame")
-    dockBlur.Name = "DockBlur"
-    dockBlur.Size = UDim2.new(1, 0, 1, 0)
-    dockBlur.BackgroundColor3 = Color3.fromRGB(240, 240, 245)
-    dockBlur.BackgroundTransparency = 0.4
-    dockBlur.BorderSizePixel = 0
-    dockBlur.ZIndex = 1
-    dockBlur.Parent = dockContainer
+        local dockAccent = Instance.new("Frame")
+        dockAccent.Name = "DockAccent"
+        dockAccent.Size = UDim2.new(1, 0, 0, 2)
+        dockAccent.Position = UDim2.new(0, 0, 0, 0)
+        dockAccent.BackgroundColor3 = Color3.fromRGB(80, 120, 255)
+        dockAccent.BorderSizePixel = 0
+        dockAccent.Parent = dockContainer
 
-    local dockBlurCorner = Instance.new("UICorner")
-    dockBlurCorner.CornerRadius = UDim.new(0, 20)
-    dockBlurCorner.Parent = dockBlur
+        local dockAccentCorner = Instance.new("UICorner")
+        dockAccentCorner.CornerRadius = UDim.new(0, 16)
+        dockAccentCorner.Parent = dockAccent
 
-    local iconSize = 56
-    local iconSpacing = 8
-    local totalIcons = (discordEnabled and 1 or 0) + (youtubeEnabled and 1 or 0)
-    local dockWidth = (iconSize * totalIcons) + (iconSpacing * (totalIcons + 1))
+        local dockAccentGradient = Instance.new("UIGradient")
+        dockAccentGradient.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(80, 120, 255)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(140, 80, 255)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(80, 120, 255))
+        }
+        dockAccentGradient.Parent = dockAccent
 
-    dockContainer.Size = UDim2.new(0, dockWidth, 0, 80)
+        local iconSize = 50
+        local iconSpacing = 12
+        local totalIcons = (discordEnabled and 1 or 0) + (youtubeEnabled and 1 or 0)
+        local dockWidth = (iconSize * totalIcons) + (iconSpacing * (totalIcons + 1))
 
-    local currentX = iconSpacing
+        dockContainer.Size = UDim2.new(0, dockWidth, 0, 70)
 
-    if discordEnabled then
-        local discordButton = Instance.new("ImageButton")
-        discordButton.Name = "DiscordButton"
-        discordButton.Size = UDim2.new(0, iconSize, 0, iconSize)
-        discordButton.Position = UDim2.new(0, currentX, 0.5, 0)
-        discordButton.AnchorPoint = Vector2.new(0, 0.5)
-        discordButton.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
-        discordButton.BorderSizePixel = 0
-        discordButton.Image = "rbxassetid://139793402469861"
-        discordButton.ScaleType = Enum.ScaleType.Fit
-        discordButton.ZIndex = 11
-        discordButton.Parent = dockContainer
+        local currentX = iconSpacing
 
-        local discordCorner = Instance.new("UICorner")
-        discordCorner.CornerRadius = UDim.new(0, 12)
-        discordCorner.Parent = discordButton
+        if discordEnabled then
+            local discordButton = Instance.new("ImageButton")
+            discordButton.Name = "DiscordButton"
+            discordButton.Size = UDim2.new(0, iconSize, 0, iconSize)
+            discordButton.Position = UDim2.new(0, currentX, 0.5, 0)
+            discordButton.AnchorPoint = Vector2.new(0, 0.5)
+            discordButton.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
+            discordButton.BorderSizePixel = 0
+            discordButton.Image = "rbxassetid://139793402469861"
+            discordButton.ScaleType = Enum.ScaleType.Fit
+            discordButton.ZIndex = 11
+            discordButton.Parent = dockContainer
 
-        discordButton.MouseButton1Click:Connect(function()
-            if setclipboard then
-                setclipboard(discordLink)
-            end
-            
-            local originalSize = discordButton.Size
-            TweenService:Create(discordButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                Size = UDim2.new(0, iconSize * 0.85, 0, iconSize * 0.85)
-            }):Play()
-            task.wait(0.1)
-            TweenService:Create(discordButton, TweenInfo.new(0.2, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
-                Size = originalSize
-            }):Play()
-        end)
+            local discordCorner = Instance.new("UICorner")
+            discordCorner.CornerRadius = UDim.new(0, 12)
+            discordCorner.Parent = discordButton
 
-        discordButton.MouseEnter:Connect(function()
-            TweenService:Create(discordButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                Size = UDim2.new(0, iconSize * 1.15, 0, iconSize * 1.15)
-            }):Play()
-        end)
+            local discordStroke = Instance.new("UIStroke")
+            discordStroke.Color = Color3.fromRGB(50, 50, 60)
+            discordStroke.Thickness = 1
+            discordStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+            discordStroke.Parent = discordButton
 
-        discordButton.MouseLeave:Connect(function()
-            TweenService:Create(discordButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                Size = UDim2.new(0, iconSize, 0, iconSize)
-            }):Play()
-        end)
+            discordButton.MouseButton1Click:Connect(function()
+                if setclipboard then
+                    setclipboard(discordLink)
+                end
+                
+                local originalSize = discordButton.Size
+                TweenService:Create(discordButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, iconSize * 0.9, 0, iconSize * 0.9)
+                }):Play()
+                task.wait(0.1)
+                TweenService:Create(discordButton, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                    Size = originalSize
+                }):Play()
+            end)
 
-        currentX = currentX + iconSize + iconSpacing
-    end
+            discordButton.MouseEnter:Connect(function()
+                TweenService:Create(discordButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, iconSize * 1.1, 0, iconSize * 1.1),
+                    BackgroundColor3 = Color3.fromRGB(38, 38, 48)
+                }):Play()
+            end)
 
-    if youtubeEnabled then
-        local youtubeButton = Instance.new("ImageButton")
-        youtubeButton.Name = "YoutubeButton"
-        youtubeButton.Size = UDim2.new(0, iconSize, 0, iconSize)
-        youtubeButton.Position = UDim2.new(0, currentX, 0.5, 0)
-        youtubeButton.AnchorPoint = Vector2.new(0, 0.5)
-        youtubeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-        youtubeButton.BorderSizePixel = 0
-        youtubeButton.Image = "rbxassetid://84280136644691"
-        youtubeButton.ScaleType = Enum.ScaleType.Fit
-        youtubeButton.ZIndex = 11
-        youtubeButton.Parent = dockContainer
+            discordButton.MouseLeave:Connect(function()
+                TweenService:Create(discordButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, iconSize, 0, iconSize),
+                    BackgroundColor3 = Color3.fromRGB(28, 28, 38)
+                }):Play()
+            end)
 
-        local youtubeCorner = Instance.new("UICorner")
-        youtubeCorner.CornerRadius = UDim.new(0, 12)
-        youtubeCorner.Parent = youtubeButton
+            currentX = currentX + iconSize + iconSpacing
+        end
 
-        youtubeButton.MouseButton1Click:Connect(function()
-            if setclipboard then
-                setclipboard(youtubeLink)
-            end
-            
-            local originalSize = youtubeButton.Size
-            TweenService:Create(youtubeButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                Size = UDim2.new(0, iconSize * 0.85, 0, iconSize * 0.85)
-            }):Play()
-            task.wait(0.1)
-            TweenService:Create(youtubeButton, TweenInfo.new(0.2, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
-                Size = originalSize
-            }):Play()
-        end)
+        if youtubeEnabled then
+            local youtubeButton = Instance.new("ImageButton")
+            youtubeButton.Name = "YoutubeButton"
+            youtubeButton.Size = UDim2.new(0, iconSize, 0, iconSize)
+            youtubeButton.Position = UDim2.new(0, currentX, 0.5, 0)
+            youtubeButton.AnchorPoint = Vector2.new(0, 0.5)
+            youtubeButton.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
+            youtubeButton.BorderSizePixel = 0
+            youtubeButton.Image = "rbxassetid://84280136644691"
+            youtubeButton.ScaleType = Enum.ScaleType.Fit
+            youtubeButton.ZIndex = 11
+            youtubeButton.Parent = dockContainer
 
-        youtubeButton.MouseEnter:Connect(function()
-            TweenService:Create(youtubeButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                Size = UDim2.new(0, iconSize * 1.15, 0, iconSize * 1.15)
-            }):Play()
-        end)
+            local youtubeCorner = Instance.new("UICorner")
+            youtubeCorner.CornerRadius = UDim.new(0, 12)
+            youtubeCorner.Parent = youtubeButton
 
-        youtubeButton.MouseLeave:Connect(function()
-            TweenService:Create(youtubeButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                Size = UDim2.new(0, iconSize, 0, iconSize)
-            }):Play()
-        end)
+            local youtubeStroke = Instance.new("UIStroke")
+            youtubeStroke.Color = Color3.fromRGB(50, 50, 60)
+            youtubeStroke.Thickness = 1
+            youtubeStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+            youtubeStroke.Parent = youtubeButton
 
-        currentX = currentX + iconSize + iconSpacing
+            youtubeButton.MouseButton1Click:Connect(function()
+                if setclipboard then
+                    setclipboard(youtubeLink)
+                end
+                
+                local originalSize = youtubeButton.Size
+                TweenService:Create(youtubeButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, iconSize * 0.9, 0, iconSize * 0.9)
+                }):Play()
+                task.wait(0.1)
+                TweenService:Create(youtubeButton, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                    Size = originalSize
+                }):Play()
+            end)
+
+            youtubeButton.MouseEnter:Connect(function()
+                TweenService:Create(youtubeButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, iconSize * 1.1, 0, iconSize * 1.1),
+                    BackgroundColor3 = Color3.fromRGB(38, 38, 48)
+                }):Play()
+            end)
+
+            youtubeButton.MouseLeave:Connect(function()
+                TweenService:Create(youtubeButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, iconSize, 0, iconSize),
+                    BackgroundColor3 = Color3.fromRGB(28, 28, 38)
+                }):Play()
+            end)
+
+            currentX = currentX + iconSize + iconSpacing
+        end
     end
 
     local infoFrame = Instance.new("Frame")
@@ -265,7 +289,7 @@ function Loader.Load(settings)
     loaderLabel.Size = UDim2.new(1, -40, 0, 30)
     loaderLabel.Position = UDim2.new(0, 20, 0, 20)
     loaderLabel.BackgroundTransparency = 1
-    loaderLabel.Text = "Leader"
+    loaderLabel.Text = "Loader"
     loaderLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     loaderLabel.TextSize = 14
     loaderLabel.Font = Enum.Font.GothamMedium
@@ -695,21 +719,30 @@ function Loader.Load(settings)
     mainContainer.Position = UDim2.new(0.5, 0, 0.5, 50)
     mainContainer.Size = UDim2.new(0, 1150, 0, 0)
 
-    dockContainer.Position = UDim2.new(0.5, 0, 0, 0)
-    dockContainer.Size = UDim2.new(0, 0, 0, 0)
-
-    local dockTween = TweenService:Create(dockContainer, TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
-        Position = UDim2.new(0.5, 0, 0, -100),
-        Size = UDim2.new(0, dockWidth, 0, 80)
-    })
+    if dockContainer then
+        dockContainer.Size = UDim2.new(0, 0, 0, 0)
+        dockContainer.Position = UDim2.new(0.5, 0, 0, 0)
+    end
 
     local entranceTween = TweenService:Create(mainContainer, TweenInfo.new(0.8, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 1150, 0, 480),
         Position = UDim2.new(0.5, 0, 0.5, 0)
     })
-    
-    dockTween:Play()
     entranceTween:Play()
+
+    if dockContainer then
+        local iconSize = 50
+        local iconSpacing = 12
+        local totalIcons = (discordEnabled and 1 or 0) + (youtubeEnabled and 1 or 0)
+        local dockWidth = (iconSize * totalIcons) + (iconSpacing * (totalIcons + 1))
+        
+        task.wait(0.3)
+        local dockTween = TweenService:Create(dockContainer, TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, dockWidth, 0, 70),
+            Position = UDim2.new(0.5, 0, 0, -90)
+        })
+        dockTween:Play()
+    end
 
     task.wait(0.3)
 
@@ -748,11 +781,25 @@ function Loader.Load(settings)
     local gradientRotation = 0
     local gradient1Rotation = 0
     local gradient2Rotation = 0
+    local dockGradientRotation = 0
     local gradientConnection
     gradientConnection = RunService.RenderStepped:Connect(function(dt)
         gradientRotation = gradientRotation + (dt * 30)
         accentGradient.Rotation = gradientRotation
         progressGradient.Rotation = gradientRotation
+
+        if dockContainer then
+            dockGradientRotation = dockGradientRotation + (dt * 30)
+            for _, child in pairs(dockContainer:GetChildren()) do
+                if child.Name == "DockAccent" then
+                    for _, gradient in pairs(child:GetChildren()) do
+                        if gradient:IsA("UIGradient") then
+                            gradient.Rotation = dockGradientRotation
+                        end
+                    end
+                end
+            end
+        end
 
         gradient1Rotation = gradient1Rotation + (dt * 20)
         gradient1.Rotation = gradient1Rotation
@@ -785,12 +832,23 @@ function Loader.Load(settings)
         local tweenInfo = TweenInfo.new(duration * 0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
         local goal = {Size = UDim2.new(newProgress / 100, 0, 1, 0)}
         local progressTween = TweenService:Create(progressBar, tweenInfo, goal)
-
-        progressTween.Completed:Once(function()
-            percentLabel.Text = newProgress .. "%"
-        end)
-
         progressTween:Play()
+        
+        local currentProgress = 0
+        local startTime = tick()
+        local progressUpdateConnection
+        progressUpdateConnection = RunService.RenderStepped:Connect(function()
+            local elapsed = tick() - startTime
+            local alpha = math.min(elapsed / (duration * 0.8), 1)
+            currentProgress = math.floor(currentProgress + (newProgress - currentProgress) * alpha)
+            percentLabel.Text = currentProgress .. "%"
+            
+            if alpha >= 1 then
+                percentLabel.Text = newProgress .. "%"
+                progressUpdateConnection:Disconnect()
+            end
+        end)
+        
         return progressTween
     end
 
@@ -829,42 +887,62 @@ function Loader.Load(settings)
                 local fadeOutInfoFinal = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
                 TweenService:Create(fullBg, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
-                TweenService:Create(gridContainer, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
+                
+                for _, line in pairs(gridContainer:GetChildren()) do
+                    if line:IsA("Frame") then
+                        TweenService:Create(line, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
+                    end
+                end
 
-                TweenService:Create(viewportFrame, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
-                TweenService:Create(viewportContainer, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
-                TweenService:Create(containerStroke, fadeOutInfoFinal, {Transparency = 1}):Play()
+                if rigModel then
+                    for _, part in pairs(rigModel:GetDescendants()) do
+                        if part:IsA("BasePart") or part:IsA("Decal") then
+                            TweenService:Create(part, fadeOutInfoFinal, {Transparency = 1}):Play()
+                        end
+                    end
+                end
 
                 for _, obj in pairs(mainContainer:GetDescendants()) do
                     if obj:IsA("TextLabel") or obj:IsA("TextButton") then
                         TweenService:Create(obj, fadeOutInfoFinal, {TextTransparency = 1}):Play()
                     elseif obj:IsA("ImageLabel") or obj:IsA("ImageButton") then
                         TweenService:Create(obj, fadeOutInfoFinal, {ImageTransparency = 1}):Play()
-                    elseif obj:IsA("Frame") or obj:IsA("ViewportFrame") then
+                    elseif obj:IsA("Frame") then
                         TweenService:Create(obj, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
                     elseif obj:IsA("UIStroke") then
                         TweenService:Create(obj, fadeOutInfoFinal, {Transparency = 1}):Play()
                     end
                 end
 
-                TweenService:Create(dockContainer, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
-                TweenService:Create(dockStroke, fadeOutInfoFinal, {Transparency = 1}):Play()
-                TweenService:Create(dockBlur, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
+                if dockContainer then
+                    for _, obj in pairs(dockContainer:GetDescendants()) do
+                        if obj:IsA("TextLabel") or obj:IsA("TextButton") then
+                            TweenService:Create(obj, fadeOutInfoFinal, {TextTransparency = 1}):Play()
+                        elseif obj:IsA("ImageLabel") or obj:IsA("ImageButton") then
+                            TweenService:Create(obj, fadeOutInfoFinal, {ImageTransparency = 1}):Play()
+                        elseif obj:IsA("Frame") then
+                            TweenService:Create(obj, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
+                        elseif obj:IsA("UIStroke") then
+                            TweenService:Create(obj, fadeOutInfoFinal, {Transparency = 1}):Play()
+                        end
+                    end
+                end
 
                 local collapseTween = TweenService:Create(mainContainer, TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.In), {
                     Size = UDim2.new(0, 1150, 0, 0),
                     Position = UDim2.new(0.5, 0, 0.5, 50)
                 })
 
-                local dockCollapseTween = TweenService:Create(dockContainer, TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.In), {
-                    Size = UDim2.new(0, 0, 0, 0),
-                    Position = UDim2.new(0.5, 0, 0, 0)
-                })
+                if dockContainer then
+                    TweenService:Create(dockContainer, TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.In), {
+                        Size = UDim2.new(0, 0, 0, 0),
+                        Position = UDim2.new(0.5, 0, 0, 0)
+                    }):Play()
+                end
 
                 local blurOut = TweenService:Create(blur, fadeOutInfoFinal, {Size = 0})
 
                 collapseTween:Play()
-                dockCollapseTween:Play()
                 blurOut:Play()
 
                 collapseTween.Completed:Wait()
