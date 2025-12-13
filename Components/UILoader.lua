@@ -84,16 +84,21 @@ function Loader.Load(settings)
     mainContainer.Parent = screenGui
 
     local dockContainer
+    local iconSize = 50
+    local iconSpacing = 12
+    local totalIcons = (discordEnabled and 1 or 0) + (youtubeEnabled and 1 or 0)
+    local dockWidth = (iconSize * totalIcons) + (iconSpacing * (totalIcons + 1))
+
     if discordEnabled or youtubeEnabled then
         dockContainer = Instance.new("Frame")
         dockContainer.Name = "DockContainer"
         dockContainer.Size = UDim2.new(0, 0, 0, 70)
-        dockContainer.Position = UDim2.new(0.5, 0, 0, -90)
-        dockContainer.AnchorPoint = Vector2.new(0.5, 1)
+        dockContainer.Position = UDim2.new(0.5, 0, 0.5, -300) -- Initial position for entrance
+        dockContainer.AnchorPoint = Vector2.new(0.5, 0.5)
         dockContainer.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
         dockContainer.BorderSizePixel = 0
         dockContainer.ZIndex = 10
-        dockContainer.Parent = mainContainer
+        dockContainer.Parent = screenGui -- Parent to screenGui, not mainContainer, for absolute positioning
 
         local dockCorner = Instance.new("UICorner")
         dockCorner.CornerRadius = UDim.new(0, 16)
@@ -125,13 +130,6 @@ function Loader.Load(settings)
         }
         dockAccentGradient.Parent = dockAccent
 
-        local iconSize = 50
-        local iconSpacing = 12
-        local totalIcons = (discordEnabled and 1 or 0) + (youtubeEnabled and 1 or 0)
-        local dockWidth = (iconSize * totalIcons) + (iconSpacing * (totalIcons + 1))
-
-        dockContainer.Size = UDim2.new(0, dockWidth, 0, 70)
-
         local currentX = iconSpacing
 
         if discordEnabled then
@@ -142,7 +140,7 @@ function Loader.Load(settings)
             discordButton.AnchorPoint = Vector2.new(0, 0.5)
             discordButton.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
             discordButton.BorderSizePixel = 0
-            discordButton.Image = "rbxassetid://139793402469861"
+            discordButton.Image = "rbxassetid://17032483842" -- New Discord Asset ID
             discordButton.ScaleType = Enum.ScaleType.Fit
             discordButton.ZIndex = 11
             discordButton.Parent = dockContainer
@@ -166,6 +164,7 @@ function Loader.Load(settings)
                 TweenService:Create(discordButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     Size = UDim2.new(0, iconSize * 0.9, 0, iconSize * 0.9)
                 }):Play()
+                
                 task.wait(0.1)
                 TweenService:Create(discordButton, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
                     Size = originalSize
@@ -197,7 +196,7 @@ function Loader.Load(settings)
             youtubeButton.AnchorPoint = Vector2.new(0, 0.5)
             youtubeButton.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
             youtubeButton.BorderSizePixel = 0
-            youtubeButton.Image = "rbxassetid://84280136644691"
+            youtubeButton.Image = "rbxassetid://17032479405" -- New YouTube Asset ID
             youtubeButton.ScaleType = Enum.ScaleType.Fit
             youtubeButton.ZIndex = 11
             youtubeButton.Parent = dockContainer
@@ -221,6 +220,7 @@ function Loader.Load(settings)
                 TweenService:Create(youtubeButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     Size = UDim2.new(0, iconSize * 0.9, 0, iconSize * 0.9)
                 }):Play()
+                
                 task.wait(0.1)
                 TweenService:Create(youtubeButton, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
                     Size = originalSize
@@ -716,13 +716,9 @@ function Loader.Load(settings)
     brandTextStroke.Transparency = 1
     brandTextStroke.Parent = brandText
 
+    -- Initial state for entrance animation
     mainContainer.Position = UDim2.new(0.5, 0, 0.5, 50)
     mainContainer.Size = UDim2.new(0, 1150, 0, 0)
-
-    if dockContainer then
-        dockContainer.Size = UDim2.new(0, 0, 0, 0)
-        dockContainer.Position = UDim2.new(0.5, 0, 0, 0)
-    end
 
     local entranceTween = TweenService:Create(mainContainer, TweenInfo.new(0.8, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 1150, 0, 480),
@@ -731,19 +727,18 @@ function Loader.Load(settings)
     entranceTween:Play()
 
     if dockContainer then
-        local iconSize = 50
-        local iconSpacing = 12
-        local totalIcons = (discordEnabled and 1 or 0) + (youtubeEnabled and 1 or 0)
-        local dockWidth = (iconSize * totalIcons) + (iconSpacing * (totalIcons + 1))
+        local dockEnterGoal = {
+            Size = UDim2.new(0, dockWidth, 0, 70),
+            -- Position calculated to be just above the mainContainer (ScreenGui space)
+            Position = UDim2.new(0.5, 0, 0.5, -480/2 - 20) -- MainContainer center Y (0.5) - half its height (240) - offset (20)
+        }
         
         task.wait(0.3)
-        local dockTween = TweenService:Create(dockContainer, TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, dockWidth, 0, 70),
-            Position = UDim2.new(0.5, 0, 0, -90)
-        })
+        local dockTween = TweenService:Create(dockContainer, TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), dockEnterGoal)
         dockTween:Play()
     end
 
+    
     task.wait(0.3)
 
     local fadeElements = {
@@ -807,6 +802,7 @@ function Loader.Load(settings)
         gradient2Rotation = gradient2Rotation - (dt * 15)
         gradient2.Rotation = gradient2Rotation
 
+        
         local offsetX = math.sin(tick() * 0.4) * 0.1
         local offsetY = math.cos(tick() * 0.3) * 0.1
         dynamicBg1.Position = UDim2.new(-0.25 + offsetX, 0, -0.25 + offsetY, 0)
@@ -815,6 +811,7 @@ function Loader.Load(settings)
         local offset2Y = math.sin(tick() * 0.6) * 0.12
         dynamicBg2.Position = UDim2.new(-0.25 + offset2X, 0, -0.25 + offset2Y, 0)
 
+        
         brandGradient.Rotation = brandGradient.Rotation + (dt * 25)
     end)
 
@@ -886,6 +883,7 @@ function Loader.Load(settings)
 
                 local fadeOutInfoFinal = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
+                -- 1. Full Screen Overlays Fade Out
                 TweenService:Create(fullBg, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
                 
                 for _, line in pairs(gridContainer:GetChildren()) do
@@ -894,6 +892,7 @@ function Loader.Load(settings)
                     end
                 end
 
+                -- 2. Rig Transparency
                 if rigModel then
                     for _, part in pairs(rigModel:GetDescendants()) do
                         if part:IsA("BasePart") or part:IsA("Decal") then
@@ -902,42 +901,39 @@ function Loader.Load(settings)
                     end
                 end
 
-                for _, obj in pairs(mainContainer:GetDescendants()) do
+                -- 3. Main Container Elements Fade Out
+                local allChildren = mainContainer:GetDescendants()
+                if dockContainer then
+                    local dockChildren = dockContainer:GetDescendants()
+                    for _, child in pairs(dockChildren) do
+                        table.insert(allChildren, child)
+                    end
+                end
+
+                for _, obj in pairs(allChildren) do
                     if obj:IsA("TextLabel") or obj:IsA("TextButton") then
                         TweenService:Create(obj, fadeOutInfoFinal, {TextTransparency = 1}):Play()
                     elseif obj:IsA("ImageLabel") or obj:IsA("ImageButton") then
                         TweenService:Create(obj, fadeOutInfoFinal, {ImageTransparency = 1}):Play()
-                    elseif obj:IsA("Frame") then
+                    elseif obj:IsA("Frame") and obj ~= fullBg and obj.Parent ~= screenGui then -- Exclude fullBg, handled above
                         TweenService:Create(obj, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
                     elseif obj:IsA("UIStroke") then
                         TweenService:Create(obj, fadeOutInfoFinal, {Transparency = 1}):Play()
                     end
                 end
 
-                if dockContainer then
-                    for _, obj in pairs(dockContainer:GetDescendants()) do
-                        if obj:IsA("TextLabel") or obj:IsA("TextButton") then
-                            TweenService:Create(obj, fadeOutInfoFinal, {TextTransparency = 1}):Play()
-                        elseif obj:IsA("ImageLabel") or obj:IsA("ImageButton") then
-                            TweenService:Create(obj, fadeOutInfoFinal, {ImageTransparency = 1}):Play()
-                        elseif obj:IsA("Frame") then
-                            TweenService:Create(obj, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
-                        elseif obj:IsA("UIStroke") then
-                            TweenService:Create(obj, fadeOutInfoFinal, {Transparency = 1}):Play()
-                        end
-                    end
-                end
-
+                -- 4. Collapse and Blur Out
                 local collapseTween = TweenService:Create(mainContainer, TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.In), {
                     Size = UDim2.new(0, 1150, 0, 0),
                     Position = UDim2.new(0.5, 0, 0.5, 50)
                 })
 
                 if dockContainer then
-                    TweenService:Create(dockContainer, TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.In), {
+                    local dockExitGoal = {
                         Size = UDim2.new(0, 0, 0, 0),
-                        Position = UDim2.new(0.5, 0, 0, 0)
-                    }):Play()
+                        Position = UDim2.new(0.5, 0, 0.5, -300) -- Move back to initial/off-screen position
+                    }
+                    TweenService:Create(dockContainer, TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.In), dockExitGoal):Play()
                 end
 
                 local blurOut = TweenService:Create(blur, fadeOutInfoFinal, {Size = 0})
