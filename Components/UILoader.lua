@@ -98,7 +98,7 @@ function Loader.Load(settings)
         dockContainer = Instance.new("Frame")
         dockContainer.Name = "DockContainer"
         
-        -- Initial state: collapsed size, positioned high up (off-screen) to animate down.
+        -- Initial state: collapsed size, off-screen position (will animate from here)
         dockContainer.Size = UDim2.new(0, 0, 0, 0)
         dockContainer.Position = UDim2.new(0.5, 0, 0, 0) 
         
@@ -149,8 +149,8 @@ function Loader.Load(settings)
             discordButton.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
             discordButton.BorderSizePixel = 0
             
-            -- RELIABLE Discord Asset ID (White)
-            discordButton.Image = "rbxassetid://6022830843" 
+            -- FIX: Updated Discord Asset ID
+            discordButton.Image = "rbxassetid://139793402469861" 
             
             discordButton.ScaleType = Enum.ScaleType.Fit
             discordButton.ZIndex = 11
@@ -208,8 +208,8 @@ function Loader.Load(settings)
             youtubeButton.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
             youtubeButton.BorderSizePixel = 0
             
-            -- RELIABLE YouTube Asset ID (White)
-            youtubeButton.Image = "rbxassetid://6022830388"
+            -- FIX: Updated YouTube Asset ID
+            youtubeButton.Image = "rbxassetid://84280136644691"
             
             youtubeButton.ScaleType = Enum.ScaleType.Fit
             youtubeButton.ZIndex = 11
@@ -743,13 +743,12 @@ function Loader.Load(settings)
     if dockContainer then
         local dockEnterGoal = {
             Size = UDim2.new(0, dockWidth, 0, DOCK_HEIGHT),
-            -- TARGET Y: Center Y (0.5) - half_main_height - half_dock_height - offset
+            -- Positioned right above the center main frame
             Position = UDim2.new(0.5, 0, 0.5, - (MAIN_CONTAINER_HEIGHT/2 + DOCK_HEIGHT/2 + DOCK_OFFSET)) 
         }
         
-        -- Start dock animation slightly after main container begins
-        task.wait(0.3)
-        local dockTween = TweenService:Create(dockContainer, TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), dockEnterGoal)
+        -- FIX: Start dock animation AT THE SAME TIME (0.0 delay) and use the SAME duration (0.8) for synchronization
+        local dockTween = TweenService:Create(dockContainer, TweenInfo.new(0.8, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), dockEnterGoal)
         dockTween:Play()
     end
 
@@ -934,7 +933,7 @@ function Loader.Load(settings)
                     end
                 end
 
-                -- Use Exponential In for synchronized collapse
+                -- Exit animations are synchronized with the same TweenInfo
                 local collapseTween = TweenService:Create(mainContainer, TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.In), {
                     Size = UDim2.new(0, MAIN_CONTAINER_WIDTH, 0, 0),
                     Position = UDim2.new(0.5, 0, 0.5, 50)
@@ -943,8 +942,8 @@ function Loader.Load(settings)
                 if dockContainer then
                     local dockExitGoal = {
                         Size = UDim2.new(0, 0, 0, 0),
-                        -- Animate up and off-screen
-                        Position = UDim2.new(0.5, 0, 0, -DOCK_HEIGHT/2)
+                        -- Make the dock collapse towards the top-center to visually move away from the main frame
+                        Position = UDim2.new(0.5, 0, 0.5, - (MAIN_CONTAINER_HEIGHT/2 + DOCK_OFFSET + 100))
                     }
                     TweenService:Create(dockContainer, TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.In), dockExitGoal):Play()
                 end
