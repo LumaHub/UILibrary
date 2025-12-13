@@ -4,6 +4,10 @@ function Loader.Load(settings)
     settings = settings or {}
     local customTitle = settings.Title or "UI LIBRARY"
     local customSubtitle = settings.Subtitle or "Preparing interface..."
+    local discordEnabled = settings.DiscordLink ~= nil
+    local discordLink = settings.DiscordLink or "https://discord.gg/example"
+    local youtubeEnabled = settings.YoutubeLink ~= nil
+    local youtubeLink = settings.YoutubeLink or "https://youtube.com/@example"
     
     local Players = game:GetService("Players")
     local TweenService = game:GetService("TweenService")
@@ -78,6 +82,144 @@ function Loader.Load(settings)
     mainContainer.BackgroundTransparency = 1
     mainContainer.ZIndex = 4
     mainContainer.Parent = screenGui
+
+    local dockContainer = Instance.new("Frame")
+    dockContainer.Name = "DockContainer"
+    dockContainer.Size = UDim2.new(0, 0, 0, 80)
+    dockContainer.Position = UDim2.new(0.5, 0, 0, -100)
+    dockContainer.AnchorPoint = Vector2.new(0.5, 1)
+    dockContainer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    dockContainer.BackgroundTransparency = 0.3
+    dockContainer.BorderSizePixel = 0
+    dockContainer.ZIndex = 10
+    dockContainer.Parent = mainContainer
+
+    local dockCorner = Instance.new("UICorner")
+    dockCorner.CornerRadius = UDim.new(0, 20)
+    dockCorner.Parent = dockContainer
+
+    local dockStroke = Instance.new("UIStroke")
+    dockStroke.Color = Color3.fromRGB(255, 255, 255)
+    dockStroke.Thickness = 1
+    dockStroke.Transparency = 0.7
+    dockStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    dockStroke.Parent = dockContainer
+
+    local dockBlur = Instance.new("Frame")
+    dockBlur.Name = "DockBlur"
+    dockBlur.Size = UDim2.new(1, 0, 1, 0)
+    dockBlur.BackgroundColor3 = Color3.fromRGB(240, 240, 245)
+    dockBlur.BackgroundTransparency = 0.4
+    dockBlur.BorderSizePixel = 0
+    dockBlur.ZIndex = 1
+    dockBlur.Parent = dockContainer
+
+    local dockBlurCorner = Instance.new("UICorner")
+    dockBlurCorner.CornerRadius = UDim.new(0, 20)
+    dockBlurCorner.Parent = dockBlur
+
+    local iconSize = 56
+    local iconSpacing = 8
+    local totalIcons = (discordEnabled and 1 or 0) + (youtubeEnabled and 1 or 0)
+    local dockWidth = (iconSize * totalIcons) + (iconSpacing * (totalIcons + 1))
+
+    dockContainer.Size = UDim2.new(0, dockWidth, 0, 80)
+
+    local currentX = iconSpacing
+
+    if discordEnabled then
+        local discordButton = Instance.new("ImageButton")
+        discordButton.Name = "DiscordButton"
+        discordButton.Size = UDim2.new(0, iconSize, 0, iconSize)
+        discordButton.Position = UDim2.new(0, currentX, 0.5, 0)
+        discordButton.AnchorPoint = Vector2.new(0, 0.5)
+        discordButton.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+        discordButton.BorderSizePixel = 0
+        discordButton.Image = "rbxassetid://139793402469861"
+        discordButton.ScaleType = Enum.ScaleType.Fit
+        discordButton.ZIndex = 11
+        discordButton.Parent = dockContainer
+
+        local discordCorner = Instance.new("UICorner")
+        discordCorner.CornerRadius = UDim.new(0, 12)
+        discordCorner.Parent = discordButton
+
+        discordButton.MouseButton1Click:Connect(function()
+            if setclipboard then
+                setclipboard(discordLink)
+            end
+            
+            local originalSize = discordButton.Size
+            TweenService:Create(discordButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, iconSize * 0.85, 0, iconSize * 0.85)
+            }):Play()
+            task.wait(0.1)
+            TweenService:Create(discordButton, TweenInfo.new(0.2, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
+                Size = originalSize
+            }):Play()
+        end)
+
+        discordButton.MouseEnter:Connect(function()
+            TweenService:Create(discordButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, iconSize * 1.15, 0, iconSize * 1.15)
+            }):Play()
+        end)
+
+        discordButton.MouseLeave:Connect(function()
+            TweenService:Create(discordButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, iconSize, 0, iconSize)
+            }):Play()
+        end)
+
+        currentX = currentX + iconSize + iconSpacing
+    end
+
+    if youtubeEnabled then
+        local youtubeButton = Instance.new("ImageButton")
+        youtubeButton.Name = "YoutubeButton"
+        youtubeButton.Size = UDim2.new(0, iconSize, 0, iconSize)
+        youtubeButton.Position = UDim2.new(0, currentX, 0.5, 0)
+        youtubeButton.AnchorPoint = Vector2.new(0, 0.5)
+        youtubeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+        youtubeButton.BorderSizePixel = 0
+        youtubeButton.Image = "rbxassetid://84280136644691"
+        youtubeButton.ScaleType = Enum.ScaleType.Fit
+        youtubeButton.ZIndex = 11
+        youtubeButton.Parent = dockContainer
+
+        local youtubeCorner = Instance.new("UICorner")
+        youtubeCorner.CornerRadius = UDim.new(0, 12)
+        youtubeCorner.Parent = youtubeButton
+
+        youtubeButton.MouseButton1Click:Connect(function()
+            if setclipboard then
+                setclipboard(youtubeLink)
+            end
+            
+            local originalSize = youtubeButton.Size
+            TweenService:Create(youtubeButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, iconSize * 0.85, 0, iconSize * 0.85)
+            }):Play()
+            task.wait(0.1)
+            TweenService:Create(youtubeButton, TweenInfo.new(0.2, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
+                Size = originalSize
+            }):Play()
+        end)
+
+        youtubeButton.MouseEnter:Connect(function()
+            TweenService:Create(youtubeButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, iconSize * 1.15, 0, iconSize * 1.15)
+            }):Play()
+        end)
+
+        youtubeButton.MouseLeave:Connect(function()
+            TweenService:Create(youtubeButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, iconSize, 0, iconSize)
+            }):Play()
+        end)
+
+        currentX = currentX + iconSize + iconSpacing
+    end
 
     local infoFrame = Instance.new("Frame")
     infoFrame.Name = "InfoFrame"
@@ -172,6 +314,9 @@ function Loader.Load(settings)
     local worldModel = Instance.new("WorldModel")
     worldModel.Parent = viewportFrame
 
+    local rigModel = nil
+    local rotationConnection = nil
+
     local function setupCharacter()
         task.spawn(function()
             local character = player.Character or player.CharacterAdded:Wait()
@@ -192,6 +337,7 @@ function Loader.Load(settings)
             end
 
             rig.Parent = worldModel
+            rigModel = rig
 
             local hrp = rig:FindFirstChild("HumanoidRootPart")
             if hrp then
@@ -199,10 +345,11 @@ function Loader.Load(settings)
                 local humRoot = rig:FindFirstChild("Humanoid") and rig:FindFirstChild("Humanoid").RootPart or hrp
                 camera.CFrame = CFrame.new(humRoot.Position + Vector3.new(0, 1.2, 4.5), humRoot.Position + Vector3.new(0, 1.2, 0))
 
-                local rotationConnection
                 rotationConnection = RunService.RenderStepped:Connect(function(dt)
                     if not rig or not rig.Parent then
-                        rotationConnection:Disconnect()
+                        if rotationConnection then
+                            rotationConnection:Disconnect()
+                        end
                         return
                     end
                     hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(dt * 35), 0)
@@ -320,25 +467,54 @@ function Loader.Load(settings)
     loadingStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     loadingStroke.Parent = loadingFrame
 
-    local dynamicGradient = Instance.new("Frame")
-    dynamicGradient.Name = "DynamicGradientOverlay"
-    dynamicGradient.Size = UDim2.new(2, 0, 2, 0)
-    dynamicGradient.Position = UDim2.new(-0.5, 0, -0.5, 0)
-    dynamicGradient.BackgroundTransparency = 0.6
-    dynamicGradient.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
-    dynamicGradient.BorderSizePixel = 0
-    dynamicGradient.ZIndex = 1
-    dynamicGradient.Parent = loadingFrame
+    local dynamicBg1 = Instance.new("Frame")
+    dynamicBg1.Name = "DynamicBg1"
+    dynamicBg1.Size = UDim2.new(1.5, 0, 1.5, 0)
+    dynamicBg1.Position = UDim2.new(-0.25, 0, -0.25, 0)
+    dynamicBg1.BackgroundTransparency = 0.7
+    dynamicBg1.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+    dynamicBg1.BorderSizePixel = 0
+    dynamicBg1.ZIndex = 1
+    dynamicBg1.Parent = loadingFrame
 
-    local dynamicGrad = Instance.new("UIGradient")
-    dynamicGrad.Name = "DynamicGradient"
-    dynamicGrad.Rotation = 0
-    dynamicGrad.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 40)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(35, 35, 60)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 40))
+    local gradient1 = Instance.new("UIGradient")
+    gradient1.Rotation = 45
+    gradient1.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(80, 120, 255)),
+        ColorSequenceKeypoint.new(0.3, Color3.fromRGB(140, 80, 255)),
+        ColorSequenceKeypoint.new(0.6, Color3.fromRGB(255, 80, 140)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(80, 120, 255))
     }
-    dynamicGrad.Parent = dynamicGradient
+    gradient1.Transparency = NumberSequence.new{
+        NumberSequenceKeypoint.new(0, 0.95),
+        NumberSequenceKeypoint.new(0.5, 0.85),
+        NumberSequenceKeypoint.new(1, 0.95)
+    }
+    gradient1.Parent = dynamicBg1
+
+    local dynamicBg2 = Instance.new("Frame")
+    dynamicBg2.Name = "DynamicBg2"
+    dynamicBg2.Size = UDim2.new(1.5, 0, 1.5, 0)
+    dynamicBg2.Position = UDim2.new(-0.25, 0, -0.25, 0)
+    dynamicBg2.BackgroundTransparency = 0.8
+    dynamicBg2.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+    dynamicBg2.BorderSizePixel = 0
+    dynamicBg2.ZIndex = 1
+    dynamicBg2.Parent = loadingFrame
+
+    local gradient2 = Instance.new("UIGradient")
+    gradient2.Rotation = -30
+    gradient2.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 120, 80)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(80, 200, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 120, 80))
+    }
+    gradient2.Transparency = NumberSequence.new{
+        NumberSequenceKeypoint.new(0, 0.9),
+        NumberSequenceKeypoint.new(0.5, 0.75),
+        NumberSequenceKeypoint.new(1, 0.9)
+    }
+    gradient2.Parent = dynamicBg2
 
     local contentFrame = Instance.new("Frame")
     contentFrame.Name = "ContentFrame"
@@ -519,10 +695,20 @@ function Loader.Load(settings)
     mainContainer.Position = UDim2.new(0.5, 0, 0.5, 50)
     mainContainer.Size = UDim2.new(0, 1150, 0, 0)
 
+    dockContainer.Position = UDim2.new(0.5, 0, 0, 0)
+    dockContainer.Size = UDim2.new(0, 0, 0, 0)
+
+    local dockTween = TweenService:Create(dockContainer, TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+        Position = UDim2.new(0.5, 0, 0, -100),
+        Size = UDim2.new(0, dockWidth, 0, 80)
+    })
+
     local entranceTween = TweenService:Create(mainContainer, TweenInfo.new(0.8, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 1150, 0, 480),
         Position = UDim2.new(0.5, 0, 0.5, 0)
     })
+    
+    dockTween:Play()
     entranceTween:Play()
 
     task.wait(0.3)
@@ -560,24 +746,28 @@ function Loader.Load(settings)
     end)
 
     local gradientRotation = 0
-    local bgOffset = 0
-    local bgSpeed = 0.015
+    local gradient1Rotation = 0
+    local gradient2Rotation = 0
     local gradientConnection
     gradientConnection = RunService.RenderStepped:Connect(function(dt)
         gradientRotation = gradientRotation + (dt * 30)
         accentGradient.Rotation = gradientRotation
         progressGradient.Rotation = gradientRotation
 
-        bgOffset = bgOffset + (dt * bgSpeed)
-        local sineOffset = math.sin(tick() * 0.5) * 0.05
+        gradient1Rotation = gradient1Rotation + (dt * 20)
+        gradient1.Rotation = gradient1Rotation
+        
+        gradient2Rotation = gradient2Rotation - (dt * 15)
+        gradient2.Rotation = gradient2Rotation
 
-        dynamicGradient.Position = UDim2.new(-0.5 + sineOffset, 0, -0.5 + bgOffset, 0)
+        local offsetX = math.sin(tick() * 0.4) * 0.1
+        local offsetY = math.cos(tick() * 0.3) * 0.1
+        dynamicBg1.Position = UDim2.new(-0.25 + offsetX, 0, -0.25 + offsetY, 0)
+        
+        local offset2X = math.cos(tick() * 0.5) * 0.15
+        local offset2Y = math.sin(tick() * 0.6) * 0.12
+        dynamicBg2.Position = UDim2.new(-0.25 + offset2X, 0, -0.25 + offset2Y, 0)
 
-        if bgOffset >= 1 then
-            bgOffset = 0
-        end
-
-        dynamicGrad.Rotation = dynamicGrad.Rotation + (dt * 15)
         brandGradient.Rotation = brandGradient.Rotation + (dt * 25)
     end)
 
@@ -634,11 +824,16 @@ function Loader.Load(settings)
 
                 if pulseConnection then pulseConnection:Disconnect() end
                 if gradientConnection then gradientConnection:Disconnect() end
+                if rotationConnection then rotationConnection:Disconnect() end
 
                 local fadeOutInfoFinal = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
                 TweenService:Create(fullBg, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
                 TweenService:Create(gridContainer, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
+
+                TweenService:Create(viewportFrame, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
+                TweenService:Create(viewportContainer, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
+                TweenService:Create(containerStroke, fadeOutInfoFinal, {Transparency = 1}):Play()
 
                 for _, obj in pairs(mainContainer:GetDescendants()) do
                     if obj:IsA("TextLabel") or obj:IsA("TextButton") then
@@ -652,14 +847,24 @@ function Loader.Load(settings)
                     end
                 end
 
+                TweenService:Create(dockContainer, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
+                TweenService:Create(dockStroke, fadeOutInfoFinal, {Transparency = 1}):Play()
+                TweenService:Create(dockBlur, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
+
                 local collapseTween = TweenService:Create(mainContainer, TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.In), {
                     Size = UDim2.new(0, 1150, 0, 0),
                     Position = UDim2.new(0.5, 0, 0.5, 50)
                 })
 
+                local dockCollapseTween = TweenService:Create(dockContainer, TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.In), {
+                    Size = UDim2.new(0, 0, 0, 0),
+                    Position = UDim2.new(0.5, 0, 0, 0)
+                })
+
                 local blurOut = TweenService:Create(blur, fadeOutInfoFinal, {Size = 0})
 
                 collapseTween:Play()
+                dockCollapseTween:Play()
                 blurOut:Play()
 
                 collapseTween.Completed:Wait()
