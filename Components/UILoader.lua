@@ -1,3 +1,15 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local Lighting = game:GetService("Lighting")
+
+-- ///////////////////////////////////////////////////////////
+-- //                 PART 1: THE LOADER                    //
+-- //      (Original consistent UI with callback added)     //
+-- ///////////////////////////////////////////////////////////
+
 local Loader = {}
 
 function Loader.Load(settings)
@@ -8,12 +20,8 @@ function Loader.Load(settings)
     local discordLink = settings.DiscordLink or "https://discord.gg/example"
     local youtubeEnabled = settings.YoutubeLink ~= nil
     local youtubeLink = settings.YoutubeLink or "https://youtube.com/@example"
+    local onComplete = settings.Callback or function() end
     
-    local Players = game:GetService("Players")
-    local TweenService = game:GetService("TweenService")
-    local RunService = game:GetService("RunService")
-    local Lighting = game:GetService("Lighting")
-
     local player = Players.LocalPlayer
     local playerGui = player:WaitForChild("PlayerGui")
 
@@ -88,17 +96,15 @@ function Loader.Load(settings)
     mainContainer.ZIndex = 4
     mainContainer.Parent = screenGui
 
-    -- Add UIScale for mobile responsiveness
     local uiScale = Instance.new("UIScale")
     uiScale.Parent = mainContainer
     
-    -- Adjust scale based on screen size
     local function updateScale()
         local screenSize = screenGui.AbsoluteSize
         local scaleX = screenSize.X / 1920
         local scaleY = screenSize.Y / 1080
         local scale = math.min(scaleX, scaleY, 1)
-        uiScale.Scale = scale
+        uiScale.Scale = math.max(scale, 0.6) 
     end
     
     updateScale()
@@ -113,11 +119,8 @@ function Loader.Load(settings)
     if discordEnabled or youtubeEnabled then
         dockContainer = Instance.new("Frame")
         dockContainer.Name = "DockContainer"
-        
-        -- Initial collapsed state - positioned exactly where it will appear
         dockContainer.Size = UDim2.new(0, 0, 0, 0)
         dockContainer.Position = UDim2.new(0.5, 0, 0.5, -(MAIN_CONTAINER_HEIGHT/2 + DOCK_HEIGHT/2 + DOCK_OFFSET))
-        
         dockContainer.AnchorPoint = Vector2.new(0.5, 0.5)
         dockContainer.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
         dockContainer.BorderSizePixel = 0
@@ -134,7 +137,6 @@ function Loader.Load(settings)
         dockStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
         dockStroke.Parent = dockContainer
 
-        -- Blue accent strip for dock
         local dockAccent = Instance.new("Frame")
         dockAccent.Name = "DockAccent"
         dockAccent.Size = UDim2.new(1, 0, 0, 2)
@@ -165,10 +167,7 @@ function Loader.Load(settings)
             discordButton.AnchorPoint = Vector2.new(0, 0.5)
             discordButton.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
             discordButton.BorderSizePixel = 0
-            
-            -- Fixed Discord icon - using Roblox's built-in icons or a more reliable asset
-            discordButton.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
-            
+            discordButton.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png" 
             discordButton.ScaleType = Enum.ScaleType.Fit
             discordButton.ZIndex = 11
             discordButton.Parent = dockContainer
@@ -183,7 +182,6 @@ function Loader.Load(settings)
             discordStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
             discordStroke.Parent = discordButton
 
-            -- Discord icon text fallback
             local discordText = Instance.new("TextLabel")
             discordText.Size = UDim2.new(1, 0, 1, 0)
             discordText.BackgroundTransparency = 1
@@ -197,32 +195,7 @@ function Loader.Load(settings)
                 if setclipboard then
                     setclipboard(discordLink)
                 end
-                
-                local originalSize = discordButton.Size
-                TweenService:Create(discordButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    Size = UDim2.new(0, iconSize * 0.9, 0, iconSize * 0.9)
-                }):Play()
-                
-                task.wait(0.1)
-                TweenService:Create(discordButton, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                    Size = originalSize
-                }):Play()
             end)
-
-            discordButton.MouseEnter:Connect(function()
-                TweenService:Create(discordButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    Size = UDim2.new(0, iconSize * 1.1, 0, iconSize * 1.1),
-                    BackgroundColor3 = Color3.fromRGB(38, 38, 48)
-                }):Play()
-            end)
-
-            discordButton.MouseLeave:Connect(function()
-                TweenService:Create(discordButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    Size = UDim2.new(0, iconSize, 0, iconSize),
-                    BackgroundColor3 = Color3.fromRGB(28, 28, 38)
-                }):Play()
-            end)
-
             currentX = currentX + iconSize + iconSpacing
         end
 
@@ -234,10 +207,7 @@ function Loader.Load(settings)
             youtubeButton.AnchorPoint = Vector2.new(0, 0.5)
             youtubeButton.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
             youtubeButton.BorderSizePixel = 0
-            
-            -- Fixed YouTube icon
             youtubeButton.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
-            
             youtubeButton.ScaleType = Enum.ScaleType.Fit
             youtubeButton.ZIndex = 11
             youtubeButton.Parent = dockContainer
@@ -252,7 +222,6 @@ function Loader.Load(settings)
             youtubeStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
             youtubeStroke.Parent = youtubeButton
 
-            -- YouTube icon text fallback
             local youtubeText = Instance.new("TextLabel")
             youtubeText.Size = UDim2.new(1, 0, 1, 0)
             youtubeText.BackgroundTransparency = 1
@@ -266,30 +235,6 @@ function Loader.Load(settings)
                 if setclipboard then
                     setclipboard(youtubeLink)
                 end
-            
-                local originalSize = youtubeButton.Size
-                TweenService:Create(youtubeButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    Size = UDim2.new(0, iconSize * 0.9, 0, iconSize * 0.9)
-                }):Play()
-            
-                task.wait(0.1)
-                TweenService:Create(youtubeButton, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                    Size = originalSize
-                }):Play()
-            end)
-
-            youtubeButton.MouseEnter:Connect(function()
-                TweenService:Create(youtubeButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    Size = UDim2.new(0, iconSize * 1.1, 0, iconSize * 1.1),
-                    BackgroundColor3 = Color3.fromRGB(38, 38, 48)
-                }):Play()
-            end)
-
-            youtubeButton.MouseLeave:Connect(function()
-                TweenService:Create(youtubeButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    Size = UDim2.new(0, iconSize, 0, iconSize),
-                    BackgroundColor3 = Color3.fromRGB(28, 28, 38)
-                }):Play()
             end)
         end
     end
@@ -313,7 +258,6 @@ function Loader.Load(settings)
     infoStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     infoStroke.Parent = infoFrame
 
-    -- Blue accent strip for info frame
     local topAccent = Instance.new("Frame")
     topAccent.Name = "TopAccent"
     topAccent.Size = UDim2.new(1, 0, 0, 2)
@@ -395,35 +339,26 @@ function Loader.Load(settings)
         task.spawn(function()
             local character = player.Character or player.CharacterAdded:Wait()
             task.wait(0.3)
-
             local humanoid = character:FindFirstChildOfClass("Humanoid")
             if not humanoid then return end
-
             local description = humanoid:GetAppliedDescription()
             if not description then return end
-
             local rig = Players:CreateHumanoidModelFromDescription(description, Enum.HumanoidRigType.R15)
-
             for _, obj in pairs(rig:GetDescendants()) do
                 if obj:IsA("Script") or obj:IsA("LocalScript") or obj:IsA("ModuleScript") then
                     obj:Destroy()
                 end
             end
-
             rig.Parent = worldModel
             rigModel = rig
-
             local hrp = rig:FindFirstChild("HumanoidRootPart")
             if hrp then
                 hrp.Anchored = true
                 local humRoot = rig:FindFirstChild("Humanoid") and rig:FindFirstChild("Humanoid").RootPart or hrp
                 camera.CFrame = CFrame.new(humRoot.Position + Vector3.new(0, 1.2, 4.5), humRoot.Position + Vector3.new(0, 1.2, 0))
-
                 rotationConnection = RunService.RenderStepped:Connect(function(dt)
                     if not rig or not rig.Parent then
-                        if rotationConnection then
-                            rotationConnection:Disconnect()
-                        end
+                        if rotationConnection then rotationConnection:Disconnect() end
                         return
                     end
                     hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(dt * 35), 0)
@@ -431,7 +366,6 @@ function Loader.Load(settings)
             end
         end)
     end
-
     setupCharacter()
 
     local infoContainer = Instance.new("Frame")
@@ -455,10 +389,6 @@ function Loader.Load(settings)
     usernameLabel.TextScaled = true
     usernameLabel.Parent = infoContainer
 
-    local usernameConstraint = Instance.new("UITextSizeConstraint")
-    usernameConstraint.MaxTextSize = 18
-    usernameConstraint.Parent = usernameLabel
-
     local userIdLabel = Instance.new("TextLabel")
     userIdLabel.Name = "UserId"
     userIdLabel.Size = UDim2.new(1, 0, 0, 24)
@@ -473,27 +403,12 @@ function Loader.Load(settings)
     userIdLabel.TextScaled = true
     userIdLabel.Parent = infoContainer
 
-    local userIdConstraint = Instance.new("UITextSizeConstraint")
-    userIdConstraint.MaxTextSize = 14
-    userIdConstraint.Parent = userIdLabel
-
-    local executorName = "Unknown"
-    if identifyexecutor then
-        executorName = identifyexecutor()
-    elseif KRNL_LOADED then
-        executorName = "KRNL"
-    elseif syn then
-        executorName = "Synapse X"
-    elseif SENTINEL_V2 then
-        executorName = "Sentinel"
-    end
-
     local executorLabel = Instance.new("TextLabel")
     executorLabel.Name = "Executor"
     executorLabel.Size = UDim2.new(1, 0, 0, 24)
     executorLabel.Position = UDim2.new(0, 0, 0, 60)
     executorLabel.BackgroundTransparency = 1
-    executorLabel.Text = "Executor: " .. executorName
+    executorLabel.Text = "Executor: Unknown"
     executorLabel.TextColor3 = Color3.fromRGB(80, 120, 255)
     executorLabel.TextSize = 14
     executorLabel.Font = Enum.Font.GothamMedium
@@ -501,10 +416,6 @@ function Loader.Load(settings)
     executorLabel.TextTransparency = 1
     executorLabel.TextScaled = true
     executorLabel.Parent = infoContainer
-
-    local executorConstraint = Instance.new("UITextSizeConstraint")
-    executorConstraint.MaxTextSize = 14
-    executorConstraint.Parent = executorLabel
 
     local statusContainer = Instance.new("Frame")
     statusContainer.Name = "StatusContainer"
@@ -556,7 +467,6 @@ function Loader.Load(settings)
     loadingStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     loadingStroke.Parent = loadingFrame
 
-    -- Blue accent strip for loading frame
     local loadingAccent = Instance.new("Frame")
     loadingAccent.Name = "LoadingAccent"
     loadingAccent.Size = UDim2.new(1, 0, 0, 2)
@@ -603,30 +513,6 @@ function Loader.Load(settings)
     }
     gradient1.Parent = dynamicBg1
 
-    local dynamicBg2 = Instance.new("Frame")
-    dynamicBg2.Name = "DynamicBg2"
-    dynamicBg2.Size = UDim2.new(1.5, 0, 1.5, 0)
-    dynamicBg2.Position = UDim2.new(-0.25, 0, -0.25, 0)
-    dynamicBg2.BackgroundTransparency = 0.8
-    dynamicBg2.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
-    dynamicBg2.BorderSizePixel = 0
-    dynamicBg2.ZIndex = 1
-    dynamicBg2.Parent = loadingFrame
-
-    local gradient2 = Instance.new("UIGradient")
-    gradient2.Rotation = -30
-    gradient2.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 120, 80)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(80, 200, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 120, 80))
-    }
-    gradient2.Transparency = NumberSequence.new{
-        NumberSequenceKeypoint.new(0, 0.9),
-        NumberSequenceKeypoint.new(0.5, 0.75),
-        NumberSequenceKeypoint.new(1, 0.9)
-    }
-    gradient2.Parent = dynamicBg2
-
     local contentFrame = Instance.new("Frame")
     contentFrame.Name = "ContentFrame"
     contentFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -648,10 +534,6 @@ function Loader.Load(settings)
     titleLabel.TextScaled = true
     titleLabel.Parent = contentFrame
 
-    local titleConstraint = Instance.new("UITextSizeConstraint")
-    titleConstraint.MaxTextSize = 38
-    titleConstraint.Parent = titleLabel
-
     local titleGlow = Instance.new("UIStroke")
     titleGlow.Color = Color3.fromRGB(80, 120, 255)
     titleGlow.Thickness = 0
@@ -671,10 +553,6 @@ function Loader.Load(settings)
     subtitleLabel.TextTransparency = 1
     subtitleLabel.TextScaled = true
     subtitleLabel.Parent = contentFrame
-
-    local subtitleConstraint = Instance.new("UITextSizeConstraint")
-    subtitleConstraint.MaxTextSize = 15
-    subtitleConstraint.Parent = subtitleLabel
 
     local progressContainer = Instance.new("Frame")
     progressContainer.Name = "ProgressContainer"
@@ -707,27 +585,6 @@ function Loader.Load(settings)
     }
     progressGradient.Parent = progressBar
 
-    local progressGlow = Instance.new("Frame")
-    progressGlow.Name = "ProgressGlow"
-    progressGlow.Size = UDim2.new(0, 60, 1, 8)
-    progressGlow.Position = UDim2.new(1, -30, 0, -4)
-    progressGlow.BackgroundColor3 = Color3.fromRGB(80, 120, 255)
-    progressGlow.BackgroundTransparency = 0.8
-    progressGlow.BorderSizePixel = 0
-    progressGlow.Parent = progressBar
-
-    local glowCorner = Instance.new("UICorner")
-    glowCorner.CornerRadius = UDim.new(1, 0)
-    glowCorner.Parent = progressGlow
-
-    local glowGradient = Instance.new("UIGradient")
-    glowGradient.Transparency = NumberSequence.new{
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.5, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }
-    glowGradient.Parent = progressGlow
-
     local percentLabel = Instance.new("TextLabel")
     percentLabel.Name = "Percent"
     percentLabel.Size = UDim2.new(1, -60, 0, 32)
@@ -742,10 +599,6 @@ function Loader.Load(settings)
     percentLabel.TextScaled = true
     percentLabel.Parent = contentFrame
 
-    local percentConstraint = Instance.new("UITextSizeConstraint")
-    percentConstraint.MaxTextSize = 22
-    percentConstraint.Parent = percentLabel
-
     local statusLabel = Instance.new("TextLabel")
     statusLabel.Name = "Status"
     statusLabel.Size = UDim2.new(1, -60, 0, 24)
@@ -759,10 +612,6 @@ function Loader.Load(settings)
     statusLabel.TextTransparency = 1
     statusLabel.TextScaled = true
     statusLabel.Parent = contentFrame
-
-    local statusConstraint = Instance.new("UITextSizeConstraint")
-    statusConstraint.MaxTextSize = 13
-    statusConstraint.Parent = statusLabel
 
     local brandFrame = Instance.new("Frame")
     brandFrame.Name = "BrandFrame"
@@ -783,7 +632,6 @@ function Loader.Load(settings)
     brandStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     brandStroke.Parent = brandFrame
 
-    -- Blue accent strip for brand frame
     local brandAccent = Instance.new("Frame")
     brandAccent.Name = "BrandAccent"
     brandAccent.Size = UDim2.new(1, 0, 0, 2)
@@ -814,17 +662,6 @@ function Loader.Load(settings)
     }
     brandGradient.Parent = brandFrame
 
-    local logoImage = Instance.new("ImageLabel")
-    logoImage.Name = "LogoImage"
-    logoImage.Size = UDim2.new(0, 160, 0, 160)
-    logoImage.Position = UDim2.new(0.5, 0, 0, 120)
-    logoImage.AnchorPoint = Vector2.new(0.5, 0)
-    logoImage.BackgroundTransparency = 1
-    logoImage.Image = "rbxassetid://125073427434619"
-    logoImage.ScaleType = Enum.ScaleType.Fit
-    logoImage.ImageTransparency = 1
-    logoImage.Parent = brandFrame
-
     local brandText = Instance.new("TextLabel")
     brandText.Name = "BrandText"
     brandText.Size = UDim2.new(1, -40, 0, 80)
@@ -840,21 +677,15 @@ function Loader.Load(settings)
     brandText.TextScaled = true
     brandText.Parent = brandFrame
 
-    local brandTextConstraint = Instance.new("UITextSizeConstraint")
-    brandTextConstraint.MaxTextSize = 16
-    brandTextConstraint.Parent = brandText
-
     local brandTextStroke = Instance.new("UIStroke")
     brandTextStroke.Color = Color3.fromRGB(220, 80, 150)
     brandTextStroke.Thickness = 2
     brandTextStroke.Transparency = 1
     brandTextStroke.Parent = brandText
 
-    -- SYNCHRONIZED ENTRANCE ANIMATIONS
     mainContainer.Position = UDim2.new(0.5, 0, 0.5, 50)
     mainContainer.Size = UDim2.new(0, MAIN_CONTAINER_WIDTH, 0, 0)
 
-    -- Same timing and easing for both
     local entranceTweenInfo = TweenInfo.new(0.8, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
     
     local mainEntranceTween = TweenService:Create(mainContainer, entranceTweenInfo, {
@@ -869,8 +700,6 @@ function Loader.Load(settings)
             Size = UDim2.new(0, dockWidth, 0, DOCK_HEIGHT),
             Position = UDim2.new(0.5, 0, 0.5, -(MAIN_CONTAINER_HEIGHT/2 + DOCK_HEIGHT/2 + DOCK_OFFSET))
         }
-        
-        -- Same timing as main container
         local dockTween = TweenService:Create(dockContainer, entranceTweenInfo, dockEnterGoal)
         dockTween:Play()
     end
@@ -879,7 +708,7 @@ function Loader.Load(settings)
 
     local fadeElements = {
         loaderLabel, usernameLabel, userIdLabel, executorLabel, statusText,
-        titleLabel, subtitleLabel, percentLabel, statusLabel, logoImage, brandText
+        titleLabel, subtitleLabel, percentLabel, statusLabel, brandText
     }
 
     for i, element in ipairs(fadeElements) do
@@ -890,8 +719,6 @@ function Loader.Load(settings)
                 if element == brandText then
                     TweenService:Create(brandTextStroke, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Transparency = 0}):Play()
                 end
-            elseif element:IsA("ImageLabel") then
-                TweenService:Create(element, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageTransparency = 0}):Play()
             end
         end)
     end
@@ -902,21 +729,13 @@ function Loader.Load(settings)
     local pulseConnection
     pulseConnection = RunService.RenderStepped:Connect(function()
         local pulse = (math.sin(tick() * 4) + 1) / 2
-        statusIndicator.BackgroundColor3 = Color3.fromRGB(
-            60 + pulse * 40,
-            200 + pulse * 55,
-            100 + pulse * 40
-        )
+        statusIndicator.BackgroundColor3 = Color3.fromRGB(60 + pulse * 40, 200 + pulse * 55, 100 + pulse * 40)
     end)
 
     local gradientRotation = 0
-    local gradient1Rotation = 0
-    local gradient2Rotation = 0
-    local dockGradientRotation = 0
     local accentGradientRotation = 0
     local gradientConnection
     gradientConnection = RunService.RenderStepped:Connect(function(dt)
-        -- Rotate all the accent gradients together
         accentGradientRotation = accentGradientRotation + (dt * 30)
         accentGradient.Rotation = accentGradientRotation
         progressGradient.Rotation = accentGradientRotation
@@ -927,39 +746,25 @@ function Loader.Load(settings)
             for _, child in pairs(dockContainer:GetChildren()) do
                 if child.Name == "DockAccent" then
                     for _, gradient in pairs(child:GetChildren()) do
-                        if gradient:IsA("UIGradient") then
-                            gradient.Rotation = accentGradientRotation
-                        end
+                        if gradient:IsA("UIGradient") then gradient.Rotation = accentGradientRotation end
                     end
                 end
             end
         end
 
-        gradient1Rotation = gradient1Rotation + (dt * 20)
-        gradient1.Rotation = gradient1Rotation
-        
-        gradient2Rotation = gradient2Rotation - (dt * 15)
-        gradient2.Rotation = gradient2Rotation
-
         local offsetX = math.sin(tick() * 0.4) * 0.1
         local offsetY = math.cos(tick() * 0.3) * 0.1
         dynamicBg1.Position = UDim2.new(-0.25 + offsetX, 0, -0.25 + offsetY, 0)
         
-        local offset2X = math.cos(tick() * 0.5) * 0.15
-        local offset2Y = math.sin(tick() * 0.6) * 0.12
-        dynamicBg2.Position = UDim2.new(-0.25 + offset2X, 0, -0.25 + offset2Y, 0)
-
         brandGradient.Rotation = brandGradient.Rotation + (dt * 25)
     end)
 
     local loadingSteps = {
-        {progress = 15, duration = 1.0, status = "Connecting to services...", subtitle = "Establishing connection..."},
-        {progress = 28, duration = 1.2, status = "Loading UI components...", subtitle = "Preparing interface..."},
-        {progress = 45, duration = 1.4, status = "Initializing modules...", subtitle = "Setting up core systems..."},
-        {progress = 62, duration = 1.0, status = "Loading assets...", subtitle = "Fetching resources..."},
-        {progress = 78, duration = 1.4, status = "Configuring settings...", subtitle = "Applying preferences..."},
-        {progress = 92, duration = 1.2, status = "Finalizing setup...", subtitle = "Almost ready..."},
-        {progress = 100, duration = 0.8, status = "Complete!", subtitle = "Welcome to LumaHub"}
+        {progress = 15, duration = 0.5, status = "Connecting to services...", subtitle = "Establishing connection..."},
+        {progress = 30, duration = 0.5, status = "Loading UI components...", subtitle = "Preparing interface..."},
+        {progress = 50, duration = 0.5, status = "Initializing modules...", subtitle = "Setting up core systems..."},
+        {progress = 75, duration = 0.5, status = "Configuring settings...", subtitle = "Applying preferences..."},
+        {progress = 100, duration = 0.5, status = "Complete!", subtitle = "Welcome to LumaHub"}
     }
 
     local function updateProgress(newProgress, duration)
@@ -976,121 +781,645 @@ function Loader.Load(settings)
             local alpha = math.min(elapsed / (duration * 0.8), 1)
             currentProgress = math.floor(currentProgress + (newProgress - currentProgress) * alpha)
             percentLabel.Text = currentProgress .. "%"
-            
             if alpha >= 1 then
                 percentLabel.Text = newProgress .. "%"
                 progressUpdateConnection:Disconnect()
             end
         end)
-        
         return progressTween
     end
 
     local function animateLoading()
-        task.wait(1.0)
-
-        for i, step in ipairs(loadingSteps) do
-            local stepDuration = step.duration
-            local postTweenWait = stepDuration * 0.2
-
-            local fadeOutInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-            TweenService:Create(statusLabel, fadeOutInfo, {TextTransparency = 1}):Play()
-            TweenService:Create(subtitleLabel, fadeOutInfo, {TextTransparency = 1}):Play()
-
-            task.wait(0.2)
-
+        task.wait(0.5)
+        for _, step in ipairs(loadingSteps) do
             statusLabel.Text = step.status
             subtitleLabel.Text = step.subtitle
-
-            local fadeInInfo = TweenService:Create(statusLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0})
-            fadeInInfo:Play()
-            TweenService:Create(subtitleLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
-
-            local progressTween = updateProgress(step.progress, stepDuration)
+            local progressTween = updateProgress(step.progress, step.duration)
             progressTween.Completed:Wait()
-
-            task.wait(postTweenWait)
-
-            if step.progress == 100 then
-                task.wait(0.8)
-
-                if pulseConnection then pulseConnection:Disconnect() end
-                if gradientConnection then gradientConnection:Disconnect() end
-                if rotationConnection then rotationConnection:Disconnect() end
-
-                local fadeOutInfoFinal = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-
-                TweenService:Create(fullBg, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
-                
-                for _, line in pairs(gridContainer:GetChildren()) do
-                    if line:IsA("Frame") then
-                        TweenService:Create(line, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
-                    end
-                end
-
-                if rigModel then
-                    for _, part in pairs(rigModel:GetDescendants()) do
-                        if part:IsA("BasePart") or part:IsA("Decal") then
-                            TweenService:Create(part, fadeOutInfoFinal, {Transparency = 1}):Play()
-                        end
-                    end
-                end
-
-                local allChildren = mainContainer:GetDescendants()
-                if dockContainer then
-                    local dockChildren = dockContainer:GetDescendants()
-                    for _, child in pairs(dockChildren) do
-                        table.insert(allChildren, child)
-                    end
-                end
-
-                for _, obj in pairs(allChildren) do
-                    if obj:IsA("TextLabel") or obj:IsA("TextButton") then
-                        TweenService:Create(obj, fadeOutInfoFinal, {TextTransparency = 1}):Play()
-                    elseif obj:IsA("ImageLabel") or obj:IsA("ImageButton") then
-                        TweenService:Create(obj, fadeOutInfoFinal, {ImageTransparency = 1}):Play()
-                    elseif obj:IsA("Frame") and obj ~= fullBg and obj.Parent ~= screenGui and not obj:IsDescendantOf(dockContainer) then 
-                        TweenService:Create(obj, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
-                    elseif obj:IsA("UIStroke") then
-                        TweenService:Create(obj, fadeOutInfoFinal, {Transparency = 1}):Play()
-                    end
-                end
-
-                -- SYNCHRONIZED EXIT ANIMATIONS
-                local exitTweenInfo = TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.In)
-                
-                local collapseTween = TweenService:Create(mainContainer, exitTweenInfo, {
-                    Size = UDim2.new(0, MAIN_CONTAINER_WIDTH, 0, 0),
-                    Position = UDim2.new(0.5, 0, 0.5, 50)
-                })
-
-                if dockContainer then
-                    local dockExitGoal = {
-                        Size = UDim2.new(0, 0, 0, 0),
-                        Position = UDim2.new(0.5, 0, 0.5, -(MAIN_CONTAINER_HEIGHT/2 + DOCK_OFFSET + 100))
-                    }
-                    TweenService:Create(dockContainer, exitTweenInfo, dockExitGoal):Play()
-                end
-
-                local blurOut = TweenService:Create(blur, fadeOutInfoFinal, {Size = 0})
-
-                collapseTween:Play()
-                blurOut:Play()
-
-                collapseTween.Completed:Wait()
-
-                if blur.Parent then
-                    blur:Destroy()
-                end
-
-                screenGui:Destroy()
-
-                break
-            end
         end
+        
+        task.wait(0.5)
+
+        if pulseConnection then pulseConnection:Disconnect() end
+        if gradientConnection then gradientConnection:Disconnect() end
+        if rotationConnection then rotationConnection:Disconnect() end
+
+        local fadeOutInfoFinal = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        TweenService:Create(fullBg, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
+        TweenService:Create(mainContainer, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
+        
+        if dockContainer then
+            TweenService:Create(dockContainer, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
+        end
+
+        TweenService:Create(blur, fadeOutInfoFinal, {Size = 0}):Play()
+        task.wait(0.5)
+        
+        if blur.Parent then blur:Destroy() end
+        screenGui:Destroy()
+        
+        onComplete()
     end
 
     task.spawn(animateLoading)
 end
 
-return Loader
+
+-- ///////////////////////////////////////////////////////////
+-- //                 PART 2: THE LIBRARY                   //
+-- //     (Fixed MainFrame with themes + mobile support)    //
+-- ///////////////////////////////////////////////////////////
+
+local Library = {}
+Library.__index = Library
+
+function Library:CreateWindow(config)
+    config = config or {}
+    local windowName = config.Name or "UI Library"
+    local windowTheme = config.Theme or "Dark"
+    local keybind = config.Keybind or Enum.KeyCode.RightControl
+    
+    local Window = {}
+    Window.Tabs = {}
+    Window.CurrentTab = nil
+    Window.Notifications = {}
+    
+    local Themes = {
+        Dark = {Background = Color3.fromRGB(20, 20, 25), Secondary = Color3.fromRGB(25, 25, 30), Tertiary = Color3.fromRGB(30, 30, 35), Accent = Color3.fromRGB(88, 101, 242), Text = Color3.fromRGB(255, 255, 255), SubText = Color3.fromRGB(160, 160, 170), Border = Color3.fromRGB(45, 45, 50)},
+        OLED = {Background = Color3.fromRGB(0, 0, 0), Secondary = Color3.fromRGB(10, 10, 10), Tertiary = Color3.fromRGB(15, 15, 15), Accent = Color3.fromRGB(255, 255, 255), Text = Color3.fromRGB(255, 255, 255), SubText = Color3.fromRGB(180, 180, 180), Border = Color3.fromRGB(30, 30, 30)},
+        Grey = {Background = Color3.fromRGB(45, 45, 45), Secondary = Color3.fromRGB(55, 55, 55), Tertiary = Color3.fromRGB(65, 65, 65), Accent = Color3.fromRGB(180, 180, 180), Text = Color3.fromRGB(255, 255, 255), SubText = Color3.fromRGB(200, 200, 200), Border = Color3.fromRGB(80, 80, 80)},
+        BlossomPink = {Background = Color3.fromRGB(255, 240, 245), Secondary = Color3.fromRGB(255, 228, 225), Tertiary = Color3.fromRGB(255, 218, 225), Accent = Color3.fromRGB(255, 105, 180), Text = Color3.fromRGB(80, 40, 60), SubText = Color3.fromRGB(120, 80, 100), Border = Color3.fromRGB(255, 182, 193)},
+        DarkPink = {Background = Color3.fromRGB(30, 20, 25), Secondary = Color3.fromRGB(40, 25, 35), Tertiary = Color3.fromRGB(50, 30, 40), Accent = Color3.fromRGB(255, 20, 147), Text = Color3.fromRGB(255, 255, 255), SubText = Color3.fromRGB(200, 150, 180), Border = Color3.fromRGB(80, 40, 60)},
+        CrimsonRed = {Background = Color3.fromRGB(25, 10, 10), Secondary = Color3.fromRGB(35, 15, 15), Tertiary = Color3.fromRGB(45, 20, 20), Accent = Color3.fromRGB(220, 20, 60), Text = Color3.fromRGB(255, 255, 255), SubText = Color3.fromRGB(200, 150, 150), Border = Color3.fromRGB(80, 30, 30)},
+        DarkRed = {Background = Color3.fromRGB(20, 5, 5), Secondary = Color3.fromRGB(30, 10, 10), Tertiary = Color3.fromRGB(40, 15, 15), Accent = Color3.fromRGB(139, 0, 0), Text = Color3.fromRGB(255, 255, 255), SubText = Color3.fromRGB(180, 130, 130), Border = Color3.fromRGB(60, 20, 20)},
+        Green = {Background = Color3.fromRGB(15, 25, 15), Secondary = Color3.fromRGB(20, 35, 20), Tertiary = Color3.fromRGB(25, 45, 25), Accent = Color3.fromRGB(0, 200, 80), Text = Color3.fromRGB(255, 255, 255), SubText = Color3.fromRGB(150, 200, 150), Border = Color3.fromRGB(30, 60, 30)},
+        Ocean = {Background = Color3.fromRGB(10, 15, 25), Secondary = Color3.fromRGB(15, 22, 35), Tertiary = Color3.fromRGB(20, 28, 42), Accent = Color3.fromRGB(0, 150, 255), Text = Color3.fromRGB(255, 255, 255), SubText = Color3.fromRGB(140, 180, 220), Border = Color3.fromRGB(30, 50, 80)},
+        Blue = {Background = Color3.fromRGB(10, 10, 30), Secondary = Color3.fromRGB(15, 15, 40), Tertiary = Color3.fromRGB(20, 20, 50), Accent = Color3.fromRGB(50, 80, 255), Text = Color3.fromRGB(255, 255, 255), SubText = Color3.fromRGB(150, 150, 220), Border = Color3.fromRGB(30, 30, 80)},
+        Purple = {Background = Color3.fromRGB(20, 10, 30), Secondary = Color3.fromRGB(30, 15, 40), Tertiary = Color3.fromRGB(40, 20, 50), Accent = Color3.fromRGB(160, 50, 255), Text = Color3.fromRGB(255, 255, 255), SubText = Color3.fromRGB(200, 150, 255), Border = Color3.fromRGB(60, 30, 80)},
+        Midnight = {Background = Color3.fromRGB(8, 8, 15), Secondary = Color3.fromRGB(12, 12, 22), Tertiary = Color3.fromRGB(18, 18, 30), Accent = Color3.fromRGB(100, 100, 255), Text = Color3.fromRGB(220, 220, 255), SubText = Color3.fromRGB(120, 120, 160), Border = Color3.fromRGB(25, 25, 40)},
+        Forest = {Background = Color3.fromRGB(10, 20, 10), Secondary = Color3.fromRGB(15, 25, 15), Tertiary = Color3.fromRGB(20, 30, 20), Accent = Color3.fromRGB(34, 139, 34), Text = Color3.fromRGB(230, 255, 230), SubText = Color3.fromRGB(150, 180, 150), Border = Color3.fromRGB(20, 50, 20)},
+        Sunset = {Background = Color3.fromRGB(30, 15, 10), Secondary = Color3.fromRGB(40, 20, 15), Tertiary = Color3.fromRGB(50, 25, 20), Accent = Color3.fromRGB(255, 140, 0), Text = Color3.fromRGB(255, 240, 230), SubText = Color3.fromRGB(200, 160, 140), Border = Color3.fromRGB(80, 40, 20)},
+        Void = {Background = Color3.fromRGB(5, 5, 5), Secondary = Color3.fromRGB(10, 10, 10), Tertiary = Color3.fromRGB(15, 15, 15), Accent = Color3.fromRGB(120, 0, 255), Text = Color3.fromRGB(240, 240, 240), SubText = Color3.fromRGB(100, 100, 100), Border = Color3.fromRGB(20, 20, 20)}
+    }
+    
+    Window.Theme = Themes[windowTheme] or Themes.Dark
+    
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "LumaHubUI"
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    ScreenGui.Parent = CoreGui
+    
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "MainFrame"
+    MainFrame.Size = UDim2.new(0, 700, 0, 500)
+    MainFrame.Position = UDim2.new(0.5, -350, 0.5, -250)
+    MainFrame.BackgroundColor3 = Window.Theme.Background
+    MainFrame.BorderSizePixel = 0
+    MainFrame.ClipsDescendants = true
+    MainFrame.Parent = ScreenGui
+    
+    -- Mobile Responsive Logic
+    local function UpdateScale()
+        if UserInputService.TouchEnabled then
+            if ScreenGui.AbsoluteSize.X < 800 then
+                MainFrame.Size = UDim2.new(0, ScreenGui.AbsoluteSize.X * 0.9, 0, ScreenGui.AbsoluteSize.Y * 0.7)
+                MainFrame.Position = UDim2.new(0.5, -(ScreenGui.AbsoluteSize.X * 0.9)/2, 0.5, -(ScreenGui.AbsoluteSize.Y * 0.7)/2)
+            else
+                MainFrame.Size = UDim2.new(0, 700, 0, 500)
+                MainFrame.Position = UDim2.new(0.5, -350, 0.5, -250)
+            end
+        end
+    end
+    ScreenGui:GetPropertyChangedSignal("AbsoluteSize"):Connect(UpdateScale)
+    UpdateScale()
+
+    local MainCorner = Instance.new("UICorner")
+    MainCorner.CornerRadius = UDim.new(0, 12)
+    MainCorner.Parent = MainFrame
+    
+    local MainStroke = Instance.new("UIStroke")
+    MainStroke.Color = Window.Theme.Border
+    MainStroke.Thickness = 1
+    MainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    MainStroke.Parent = MainFrame
+    
+    local TopBar = Instance.new("Frame")
+    TopBar.Name = "TopBar"
+    TopBar.Size = UDim2.new(1, 0, 0, 50)
+    TopBar.BackgroundColor3 = Window.Theme.Secondary
+    TopBar.BorderSizePixel = 0
+    TopBar.Parent = MainFrame
+    
+    local TopBarCorner = Instance.new("UICorner")
+    TopBarCorner.CornerRadius = UDim.new(0, 12)
+    TopBarCorner.Parent = TopBar
+    
+    local TopBarAccent = Instance.new("Frame")
+    TopBarAccent.Name = "Accent"
+    TopBarAccent.Size = UDim2.new(1, 0, 0, 2)
+    TopBarAccent.Position = UDim2.new(0, 0, 1, -2)
+    TopBarAccent.BackgroundColor3 = Window.Theme.Accent
+    TopBarAccent.BorderSizePixel = 0
+    TopBarAccent.Parent = TopBar
+    
+    local Title = Instance.new("TextLabel")
+    Title.Name = "Title"
+    Title.Size = UDim2.new(0, 300, 1, 0)
+    Title.Position = UDim2.new(0, 15, 0, 0)
+    Title.BackgroundTransparency = 1
+    Title.Text = windowName
+    Title.TextColor3 = Window.Theme.Text
+    Title.TextSize = 18
+    Title.Font = Enum.Font.GothamBold
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.Parent = TopBar
+    
+    local CloseButton = Instance.new("TextButton")
+    CloseButton.Name = "CloseButton"
+    CloseButton.Size = UDim2.new(0, 40, 0, 40)
+    CloseButton.Position = UDim2.new(1, -45, 0, 5)
+    CloseButton.BackgroundColor3 = Window.Theme.Tertiary
+    CloseButton.BorderSizePixel = 0
+    CloseButton.Text = "×"
+    CloseButton.TextColor3 = Window.Theme.Text
+    CloseButton.TextSize = 24
+    CloseButton.Font = Enum.Font.GothamBold
+    CloseButton.Parent = TopBar
+    
+    local CloseCorner = Instance.new("UICorner")
+    CloseCorner.CornerRadius = UDim.new(0, 8)
+    CloseCorner.Parent = CloseButton
+    
+    CloseButton.MouseButton1Click:Connect(function()
+        TweenService:Create(MainFrame, TweenInfo.new(0.3), {Size = UDim2.new(0,0,0,0)}):Play()
+        task.wait(0.3)
+        ScreenGui:Destroy()
+    end)
+
+    -- Draggable
+    local dragging, dragInput, dragStart, startPos
+    TopBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = MainFrame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+    TopBar.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+
+    -- Mobile Toggle
+    if UserInputService.TouchEnabled then
+        local toggleBtn = Instance.new("ImageButton")
+        toggleBtn.Size = UDim2.new(0, 50, 0, 50)
+        toggleBtn.Position = UDim2.new(0.8, 0, 0.1, 0)
+        toggleBtn.BackgroundColor3 = Window.Theme.Accent
+        toggleBtn.Image = "rbxassetid://100583949363345" -- UI Icon
+        toggleBtn.Parent = ScreenGui
+        local tc = Instance.new("UICorner")
+        tc.CornerRadius = UDim.new(1,0)
+        tc.Parent = toggleBtn
+        toggleBtn.MouseButton1Click:Connect(function()
+            MainFrame.Visible = not MainFrame.Visible
+        end)
+    end
+    
+    local TabContainer = Instance.new("ScrollingFrame")
+    TabContainer.Name = "TabContainer"
+    TabContainer.Size = UDim2.new(0, 150, 1, -50)
+    TabContainer.Position = UDim2.new(0, 0, 0, 50)
+    TabContainer.BackgroundColor3 = Window.Theme.Secondary
+    TabContainer.BorderSizePixel = 0
+    TabContainer.ScrollBarThickness = 2
+    TabContainer.Parent = MainFrame
+    
+    local TabList = Instance.new("UIListLayout")
+    TabList.SortOrder = Enum.SortOrder.LayoutOrder
+    TabList.Padding = UDim.new(0, 5)
+    TabList.Parent = TabContainer
+    
+    local TabPadding = Instance.new("UIPadding")
+    TabPadding.PaddingTop = UDim.new(0, 10)
+    TabPadding.PaddingLeft = UDim.new(0, 10)
+    TabPadding.PaddingRight = UDim.new(0, 10)
+    TabPadding.Parent = TabContainer
+    
+    local ContentContainer = Instance.new("Frame")
+    ContentContainer.Name = "ContentContainer"
+    ContentContainer.Size = UDim2.new(1, -150, 1, -50)
+    ContentContainer.Position = UDim2.new(0, 150, 0, 50)
+    ContentContainer.BackgroundTransparency = 1
+    ContentContainer.Parent = MainFrame
+    
+    UserInputService.InputBegan:Connect(function(input, processed)
+        if not processed and input.KeyCode == keybind then
+            MainFrame.Visible = not MainFrame.Visible
+        end
+    end)
+
+    function Window:CreateTab(config)
+        config = config or {}
+        local tabName = config.Name or "Tab"
+        local tabIcon = config.Icon or "📄"
+        
+        local Tab = {}
+        
+        local TabButton = Instance.new("TextButton")
+        TabButton.Name = tabName
+        TabButton.Size = UDim2.new(1, 0, 0, 40)
+        TabButton.BackgroundColor3 = Window.Theme.Tertiary
+        TabButton.BorderSizePixel = 0
+        TabButton.Text = ""
+        TabButton.AutoButtonColor = false
+        TabButton.Parent = TabContainer
+        
+        local TabCorner = Instance.new("UICorner")
+        TabCorner.CornerRadius = UDim.new(0, 8)
+        TabCorner.Parent = TabButton
+        
+        local TabLabel = Instance.new("TextLabel")
+        TabLabel.Size = UDim2.new(1, -10, 1, 0)
+        TabLabel.Position = UDim2.new(0, 10, 0, 0)
+        TabLabel.BackgroundTransparency = 1
+        TabLabel.Text = tabIcon .. " " .. tabName
+        TabLabel.TextColor3 = Window.Theme.SubText
+        TabLabel.TextSize = 14
+        TabLabel.Font = Enum.Font.GothamMedium
+        TabLabel.TextXAlignment = Enum.TextXAlignment.Left
+        TabLabel.Parent = TabButton
+        
+        local TabContent = Instance.new("ScrollingFrame")
+        TabContent.Name = tabName .. "Content"
+        TabContent.Size = UDim2.new(1, -20, 1, -20)
+        TabContent.Position = UDim2.new(0, 10, 0, 10)
+        TabContent.BackgroundTransparency = 1
+        TabContent.BorderSizePixel = 0
+        TabContent.ScrollBarThickness = 4
+        TabContent.ScrollBarImageColor3 = Window.Theme.Accent
+        TabContent.Visible = false
+        TabContent.Parent = ContentContainer
+        
+        local TabContentList = Instance.new("UIListLayout")
+        TabContentList.SortOrder = Enum.SortOrder.LayoutOrder
+        TabContentList.Padding = UDim.new(0, 10)
+        TabContentList.Parent = TabContent
+        
+        TabContentList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            TabContent.CanvasSize = UDim2.new(0, 0, 0, TabContentList.AbsoluteContentSize.Y + 10)
+        end)
+        
+        TabButton.MouseButton1Click:Connect(function()
+            for _, tab in pairs(Window.Tabs) do
+                tab.Content.Visible = false
+                TweenService:Create(tab.Button, TweenInfo.new(0.2), {BackgroundColor3 = Window.Theme.Tertiary}):Play()
+                tab.Label.TextColor3 = Window.Theme.SubText
+            end
+            TabContent.Visible = true
+            TweenService:Create(TabButton, TweenInfo.new(0.2), {BackgroundColor3 = Window.Theme.Accent}):Play()
+            TabLabel.TextColor3 = Window.Theme.Text
+        end)
+        
+        Tab.Button = TabButton
+        Tab.Content = TabContent
+        Tab.Label = TabLabel
+        table.insert(Window.Tabs, Tab)
+        
+        if #Window.Tabs == 1 then
+            TabButton.MouseButton1Click:Fire()
+        end
+        
+        function Tab:CreateSection(sectionName)
+            local Section = Instance.new("Frame")
+            Section.Size = UDim2.new(1, 0, 0, 30)
+            Section.BackgroundColor3 = Window.Theme.Secondary
+            Section.Parent = TabContent
+            local sc = Instance.new("UICorner")
+            sc.CornerRadius = UDim.new(0,8)
+            sc.Parent = Section
+            local sl = Instance.new("TextLabel")
+            sl.Size = UDim2.new(1,-20,1,0)
+            sl.Position = UDim2.new(0,10,0,0)
+            sl.BackgroundTransparency = 1
+            sl.Text = sectionName
+            sl.TextColor3 = Window.Theme.Text
+            sl.Font = Enum.Font.GothamBold
+            sl.TextSize = 14
+            sl.TextXAlignment = Enum.TextXAlignment.Left
+            sl.Parent = Section
+        end
+
+        function Tab:CreateButton(config)
+            local buttonName = config.Name or "Button"
+            local cb = config.Callback or function() end
+            
+            local btnFrame = Instance.new("Frame")
+            btnFrame.Size = UDim2.new(1,0,0,40)
+            btnFrame.BackgroundColor3 = Window.Theme.Secondary
+            btnFrame.Parent = TabContent
+            local bc = Instance.new("UICorner")
+            bc.CornerRadius = UDim.new(0,8)
+            bc.Parent = btnFrame
+            
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1,-10,1,-10)
+            btn.Position = UDim2.new(0,5,0,5)
+            btn.BackgroundColor3 = Window.Theme.Tertiary
+            btn.Text = buttonName
+            btn.TextColor3 = Window.Theme.Text
+            btn.Font = Enum.Font.GothamMedium
+            btn.TextSize = 14
+            btn.Parent = btnFrame
+            local btc = Instance.new("UICorner")
+            btc.CornerRadius = UDim.new(0,6)
+            btc.Parent = btn
+            
+            btn.MouseButton1Click:Connect(function()
+                TweenService:Create(btn, TweenInfo.new(0.1), {BackgroundColor3 = Window.Theme.Accent}):Play()
+                task.wait(0.1)
+                TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Window.Theme.Tertiary}):Play()
+                pcall(cb)
+            end)
+        end
+
+        function Tab:CreateToggle(config)
+            local name = config.Name or "Toggle"
+            local default = config.Default or false
+            local cb = config.Callback or function() end
+            
+            local frame = Instance.new("Frame")
+            frame.Size = UDim2.new(1,0,0,40)
+            frame.BackgroundColor3 = Window.Theme.Secondary
+            frame.Parent = TabContent
+            local fc = Instance.new("UICorner")
+            fc.CornerRadius = UDim.new(0,8)
+            fc.Parent = frame
+            
+            local lbl = Instance.new("TextLabel")
+            lbl.Size = UDim2.new(1,-60,1,0)
+            lbl.Position = UDim2.new(0,10,0,0)
+            lbl.BackgroundTransparency = 1
+            lbl.Text = name
+            lbl.TextColor3 = Window.Theme.Text
+            lbl.Font = Enum.Font.GothamMedium
+            lbl.TextSize = 14
+            lbl.TextXAlignment = Enum.TextXAlignment.Left
+            lbl.Parent = frame
+            
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(0,40,0,20)
+            btn.Position = UDim2.new(1,-50,0.5,-10)
+            btn.BackgroundColor3 = default and Window.Theme.Accent or Window.Theme.Tertiary
+            btn.Text = ""
+            btn.Parent = frame
+            local btc = Instance.new("UICorner")
+            btc.CornerRadius = UDim.new(1,0)
+            btc.Parent = btn
+            
+            local circle = Instance.new("Frame")
+            circle.Size = UDim2.new(0,16,0,16)
+            circle.Position = default and UDim2.new(1,-18,0.5,-8) or UDim2.new(0,2,0.5,-8)
+            circle.BackgroundColor3 = Color3.new(1,1,1)
+            circle.Parent = btn
+            local cc = Instance.new("UICorner")
+            cc.CornerRadius = UDim.new(1,0)
+            cc.Parent = circle
+            
+            local toggled = default
+            btn.MouseButton1Click:Connect(function()
+                toggled = not toggled
+                TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = toggled and Window.Theme.Accent or Window.Theme.Tertiary}):Play()
+                TweenService:Create(circle, TweenInfo.new(0.2), {Position = toggled and UDim2.new(1,-18,0.5,-8) or UDim2.new(0,2,0.5,-8)}):Play()
+                pcall(cb, toggled)
+            end)
+        end
+
+        function Tab:CreateSlider(config)
+            local name = config.Name or "Slider"
+            local min = config.Min or 0
+            local max = config.Max or 100
+            local def = config.Default or min
+            local cb = config.Callback or function() end
+            
+            local frame = Instance.new("Frame")
+            frame.Size = UDim2.new(1,0,0,50)
+            frame.BackgroundColor3 = Window.Theme.Secondary
+            frame.Parent = TabContent
+            local fc = Instance.new("UICorner")
+            fc.CornerRadius = UDim.new(0,8)
+            fc.Parent = frame
+            
+            local lbl = Instance.new("TextLabel")
+            lbl.Size = UDim2.new(1,-20,0,20)
+            lbl.Position = UDim2.new(0,10,0,5)
+            lbl.BackgroundTransparency = 1
+            lbl.Text = name
+            lbl.TextColor3 = Window.Theme.Text
+            lbl.Font = Enum.Font.GothamMedium
+            lbl.TextSize = 14
+            lbl.TextXAlignment = Enum.TextXAlignment.Left
+            lbl.Parent = frame
+            
+            local val = Instance.new("TextLabel")
+            val.Size = UDim2.new(0,50,0,20)
+            val.Position = UDim2.new(1,-60,0,5)
+            val.BackgroundTransparency = 1
+            val.Text = tostring(def)
+            val.TextColor3 = Window.Theme.Accent
+            val.Font = Enum.Font.GothamBold
+            val.TextSize = 14
+            val.TextXAlignment = Enum.TextXAlignment.Right
+            val.Parent = frame
+            
+            local bar = Instance.new("Frame")
+            bar.Size = UDim2.new(1,-20,0,6)
+            bar.Position = UDim2.new(0,10,0,30)
+            bar.BackgroundColor3 = Window.Theme.Tertiary
+            bar.Parent = frame
+            local brc = Instance.new("UICorner")
+            brc.CornerRadius = UDim.new(1,0)
+            brc.Parent = bar
+            
+            local fill = Instance.new("Frame")
+            fill.Size = UDim2.new((def - min)/(max - min), 0, 1, 0)
+            fill.BackgroundColor3 = Window.Theme.Accent
+            fill.BorderSizePixel = 0
+            fill.Parent = bar
+            local flc = Instance.new("UICorner")
+            flc.CornerRadius = UDim.new(1,0)
+            flc.Parent = fill
+            
+            local trigger = Instance.new("TextButton")
+            trigger.Size = UDim2.new(1,0,1,0)
+            trigger.BackgroundTransparency = 1
+            trigger.Text = ""
+            trigger.Parent = bar
+            
+            local dragging = false
+            trigger.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = true
+                end
+            end)
+            
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = false
+                end
+            end)
+            
+            UserInputService.InputChanged:Connect(function(input)
+                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                    local scale = math.clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
+                    local value = math.floor(min + ((max - min) * scale))
+                    fill.Size = UDim2.new(scale, 0, 1, 0)
+                    val.Text = tostring(value)
+                    pcall(cb, value)
+                end
+            end)
+        end
+        
+        return Tab
+    end
+    
+    function Window:Notify(config)
+        local title = config.Title or "Notification"
+        local content = config.Content or ""
+        local duration = config.Duration or 3
+        
+        local container = Instance.new("Frame")
+        container.Size = UDim2.new(0, 300, 0, 70)
+        container.Position = UDim2.new(1, 20, 1, -100 - (#Window.Notifications * 80))
+        container.BackgroundColor3 = Window.Theme.Secondary
+        container.Parent = ScreenGui
+        local cc = Instance.new("UICorner")
+        cc.CornerRadius = UDim.new(0,8)
+        cc.Parent = container
+        local cs = Instance.new("UIStroke")
+        cs.Color = Window.Theme.Border
+        cs.Parent = container
+        
+        local bar = Instance.new("Frame")
+        bar.Size = UDim2.new(0,4,1,0)
+        bar.BackgroundColor3 = Window.Theme.Accent
+        bar.Parent = container
+        local bc = Instance.new("UICorner")
+        bc.CornerRadius = UDim.new(0,8)
+        bc.Parent = bar
+        
+        local tl = Instance.new("TextLabel")
+        tl.Size = UDim2.new(1,-20,0,20)
+        tl.Position = UDim2.new(0,15,0,10)
+        tl.BackgroundTransparency = 1
+        tl.Text = title
+        tl.TextColor3 = Window.Theme.Text
+        tl.Font = Enum.Font.GothamBold
+        tl.TextSize = 14
+        tl.TextXAlignment = Enum.TextXAlignment.Left
+        tl.Parent = container
+        
+        local cl = Instance.new("TextLabel")
+        cl.Size = UDim2.new(1,-20,0,30)
+        cl.Position = UDim2.new(0,15,0,30)
+        cl.BackgroundTransparency = 1
+        cl.Text = content
+        cl.TextColor3 = Window.Theme.SubText
+        cl.Font = Enum.Font.Gotham
+        cl.TextSize = 13
+        cl.TextWrapped = true
+        cl.TextXAlignment = Enum.TextXAlignment.Left
+        cl.TextYAlignment = Enum.TextYAlignment.Top
+        cl.Parent = container
+        
+        table.insert(Window.Notifications, container)
+        TweenService:Create(container, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Position = UDim2.new(1, -320, 1, -100 - (#Window.Notifications-1)*80)}):Play()
+        
+        task.delay(duration, function()
+            TweenService:Create(container, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Position = UDim2.new(1, 20, 1, -100)}):Play()
+            task.wait(0.5)
+            container:Destroy()
+        end)
+    end
+    
+    return Window
+end
+
+-- ///////////////////////////////////////////////////////////
+-- //                 PART 3: EXECUTION                     //
+-- ///////////////////////////////////////////////////////////
+
+Loader.Load({
+    Title = "LUMAHUB",
+    Subtitle = "Loading your premium UI...",
+    DiscordLink = "https://discord.gg/lumahub",
+    YoutubeLink = "https://youtube.com/@lumahub",
+    Callback = function()
+        -- This runs after the loader finishes
+        local Window = Library:CreateWindow({
+            Name = "LumaHub | Premium",
+            Theme = "Dark", 
+            Keybind = Enum.KeyCode.RightControl
+        })
+
+        Window:Notify({
+            Title = "Welcome Back!",
+            Content = "LumaHub has been initialized successfully",
+            Duration = 5
+        })
+
+        local MainTab = Window:CreateTab({
+            Name = "Main",
+            Icon = "🏠"
+        })
+
+        MainTab:CreateSection("Core Features")
+
+        MainTab:CreateButton({
+            Name = "Test Feature",
+            Callback = function()
+                Window:Notify({
+                    Title = "Feature Activated",
+                    Content = "This is a test feature!",
+                    Duration = 3
+                })
+            end
+        })
+
+        MainTab:CreateToggle({
+            Name = "Example Toggle",
+            Default = false,
+            Callback = function(value)
+                print("Toggle state:", value)
+            end
+        })
+
+        local SettingsTab = Window:CreateTab({
+            Name = "Settings",
+            Icon = "⚙️"
+        })
+
+        SettingsTab:CreateSection("Configuration")
+
+        SettingsTab:CreateSlider({
+            Name = "Example Slider",
+            Min = 0,
+            Max = 100,
+            Default = 50,
+            Callback = function(value)
+                print("Slider value:", value)
+            end
+        })
+    end
+})
