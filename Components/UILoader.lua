@@ -12,7 +12,7 @@ function Loader.Load(settings)
     local Players = game:GetService("Players")
     local TweenService = game:GetService("TweenService")
     local RunService = game:GetService("RunService")
-    local Lighting = game:GetService("Lighting")
+    local Lighting = game:GetService("Lighting") [cite: 1, 2]
 
     local player = Players.LocalPlayer
     local playerGui = player:WaitForChild("PlayerGui")
@@ -33,7 +33,7 @@ function Loader.Load(settings)
     blur.Parent = Lighting
 
     local blurTween = TweenService:Create(blur, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = 24})
-    blurTween:Play()
+    blurTween:Play() [cite: 2, 3]
 
     local fullBg = Instance.new("Frame")
     fullBg.Name = "FullBackground"
@@ -45,14 +45,14 @@ function Loader.Load(settings)
     fullBg.ZIndex = 1
     fullBg.Parent = screenGui
 
-    TweenService:Create(fullBg, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0.2}):Play()
+    TweenService:Create(fullBg, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0.2}):Play() [cite: 3]
 
     local gridContainer = Instance.new("Frame")
     gridContainer.Name = "GridContainer"
     gridContainer.Size = UDim2.new(1, 0, 1, 0)
     gridContainer.BackgroundTransparency = 1
     gridContainer.ZIndex = 2
-    gridContainer.Parent = screenGui
+    gridContainer.Parent = screenGui [cite: 4]
 
     for i = 1, 12 do
         local line = Instance.new("Frame")
@@ -62,7 +62,7 @@ function Loader.Load(settings)
         line.BackgroundTransparency = 0.95
         line.BorderSizePixel = 0
         line.Parent = gridContainer
-    end
+    end [cite: 4, 5]
 
     for i = 1, 8 do
         local line = Instance.new("Frame")
@@ -72,12 +72,12 @@ function Loader.Load(settings)
         line.BackgroundTransparency = 0.95
         line.BorderSizePixel = 0
         line.Parent = gridContainer
-    end
+    end [cite: 6]
 
     local MAIN_CONTAINER_WIDTH = 1150
     local MAIN_CONTAINER_HEIGHT = 480
     local DOCK_HEIGHT = 70
-    local DOCK_OFFSET = 20
+    local DOCK_OFFSET = 10 -- FIXED: Reduced offset to be just above the frame [cite: 6]
     
     local mainContainer = Instance.new("Frame")
     mainContainer.Name = "MainContainer"
@@ -86,20 +86,18 @@ function Loader.Load(settings)
     mainContainer.AnchorPoint = Vector2.new(0.5, 0.5)
     mainContainer.BackgroundTransparency = 1
     mainContainer.ZIndex = 4
-    mainContainer.Parent = screenGui
+    mainContainer.Parent = screenGui [cite: 6]
 
-    -- Add UIScale for mobile responsiveness
     local uiScale = Instance.new("UIScale")
     uiScale.Parent = mainContainer
     
-    -- Adjust scale based on screen size
     local function updateScale()
         local screenSize = screenGui.AbsoluteSize
         local scaleX = screenSize.X / 1920
         local scaleY = screenSize.Y / 1080
         local scale = math.min(scaleX, scaleY, 1)
         uiScale.Scale = scale
-    end
+    end [cite: 7, 8]
     
     updateScale()
     screenGui:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateScale)
@@ -108,21 +106,18 @@ function Loader.Load(settings)
     local iconSize = 50
     local iconSpacing = 12
     local totalIcons = (discordEnabled and 1 or 0) + (youtubeEnabled and 1 or 0)
-    local dockWidth = (iconSize * totalIcons) + (iconSpacing * (totalIcons + 1))
+    local dockWidth = (iconSize * totalIcons) + (iconSpacing * (totalIcons + 1)) [cite: 8]
 
     if discordEnabled or youtubeEnabled then
         dockContainer = Instance.new("Frame")
         dockContainer.Name = "DockContainer"
-        
-        -- Initial collapsed state - positioned exactly where it will appear
-        dockContainer.Size = UDim2.new(0, 0, 0, 0)
+        dockContainer.Size = UDim2.new(0, 0, 0, 0) -- FIXED: Starts at 0 to sync with main frame [cite: 9]
         dockContainer.Position = UDim2.new(0.5, 0, 0.5, -(MAIN_CONTAINER_HEIGHT/2 + DOCK_HEIGHT/2 + DOCK_OFFSET))
-        
         dockContainer.AnchorPoint = Vector2.new(0.5, 0.5)
         dockContainer.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
         dockContainer.BorderSizePixel = 0
         dockContainer.ZIndex = 10
-        dockContainer.Parent = screenGui
+        dockContainer.Parent = screenGui [cite: 9, 10]
 
         local dockCorner = Instance.new("UICorner")
         dockCorner.CornerRadius = UDim.new(0, 16)
@@ -132,20 +127,19 @@ function Loader.Load(settings)
         dockStroke.Color = Color3.fromRGB(35, 35, 45)
         dockStroke.Thickness = 1
         dockStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-        dockStroke.Parent = dockContainer
+        dockStroke.Parent = dockContainer [cite: 10]
 
-        -- Blue accent strip for dock
         local dockAccent = Instance.new("Frame")
         dockAccent.Name = "DockAccent"
         dockAccent.Size = UDim2.new(1, 0, 0, 2)
         dockAccent.Position = UDim2.new(0, 0, 0, 0)
         dockAccent.BackgroundColor3 = Color3.fromRGB(80, 120, 255)
         dockAccent.BorderSizePixel = 0
-        dockAccent.Parent = dockContainer
+        dockAccent.Parent = dockContainer [cite: 11]
 
         local dockAccentCorner = Instance.new("UICorner")
         dockAccentCorner.CornerRadius = UDim.new(0, 16)
-        dockAccentCorner.Parent = dockAccent
+        dockAccentCorner.Parent = dockAccent [cite: 12]
 
         local dockAccentGradient = Instance.new("UIGradient")
         dockAccentGradient.Color = ColorSequence.new{
@@ -153,7 +147,7 @@ function Loader.Load(settings)
             ColorSequenceKeypoint.new(0.5, Color3.fromRGB(140, 80, 255)),
             ColorSequenceKeypoint.new(1, Color3.fromRGB(80, 120, 255))
         }
-        dockAccentGradient.Parent = dockAccent
+        dockAccentGradient.Parent = dockAccent [cite: 12, 13]
 
         local currentX = iconSpacing
 
@@ -165,13 +159,10 @@ function Loader.Load(settings)
             discordButton.AnchorPoint = Vector2.new(0, 0.5)
             discordButton.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
             discordButton.BorderSizePixel = 0
-            
-            -- Fixed Discord icon - using Roblox's built-in icons or a more reliable asset
-            discordButton.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
-            
+            discordButton.Image = "rbxassetid://134745882888823" -- FIXED: Updated Discord ID [cite: 14]
             discordButton.ScaleType = Enum.ScaleType.Fit
             discordButton.ZIndex = 11
-            discordButton.Parent = dockContainer
+            discordButton.Parent = dockContainer [cite: 15]
 
             local discordCorner = Instance.new("UICorner")
             discordCorner.CornerRadius = UDim.new(0, 12)
@@ -181,48 +172,29 @@ function Loader.Load(settings)
             discordStroke.Color = Color3.fromRGB(88, 101, 242)
             discordStroke.Thickness = 2
             discordStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-            discordStroke.Parent = discordButton
-
-            -- Discord icon text fallback
-            local discordText = Instance.new("TextLabel")
-            discordText.Size = UDim2.new(1, 0, 1, 0)
-            discordText.BackgroundTransparency = 1
-            discordText.Text = "DC"
-            discordText.TextColor3 = Color3.fromRGB(88, 101, 242)
-            discordText.TextSize = 20
-            discordText.Font = Enum.Font.GothamBold
-            discordText.Parent = discordButton
+            discordStroke.Parent = discordButton [cite: 15, 16]
 
             discordButton.MouseButton1Click:Connect(function()
-                if setclipboard then
-                    setclipboard(discordLink)
-                end
-                
+                if setclipboard then setclipboard(discordLink) end [cite: 18]
                 local originalSize = discordButton.Size
-                TweenService:Create(discordButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    Size = UDim2.new(0, iconSize * 0.9, 0, iconSize * 0.9)
-                }):Play()
-                
+                TweenService:Create(discordButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0, iconSize * 0.9, 0, iconSize * 0.9)}):Play() [cite: 19]
                 task.wait(0.1)
-                TweenService:Create(discordButton, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                    Size = originalSize
-                }):Play()
+                TweenService:Create(discordButton, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = originalSize}):Play() [cite: 20]
             end)
 
             discordButton.MouseEnter:Connect(function()
                 TweenService:Create(discordButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     Size = UDim2.new(0, iconSize * 1.1, 0, iconSize * 1.1),
                     BackgroundColor3 = Color3.fromRGB(38, 38, 48)
-                }):Play()
+                }):Play() [cite: 20, 21]
             end)
 
             discordButton.MouseLeave:Connect(function()
                 TweenService:Create(discordButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     Size = UDim2.new(0, iconSize, 0, iconSize),
                     BackgroundColor3 = Color3.fromRGB(28, 28, 38)
-                }):Play()
+                }):Play() [cite: 21, 22]
             end)
-
             currentX = currentX + iconSize + iconSpacing
         end
 
@@ -234,13 +206,10 @@ function Loader.Load(settings)
             youtubeButton.AnchorPoint = Vector2.new(0, 0.5)
             youtubeButton.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
             youtubeButton.BorderSizePixel = 0
-            
-            -- Fixed YouTube icon
-            youtubeButton.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
-            
+            youtubeButton.Image = "rbxassetid://81575690017550" -- FIXED: Updated Youtube ID [cite: 23, 24]
             youtubeButton.ScaleType = Enum.ScaleType.Fit
             youtubeButton.ZIndex = 11
-            youtubeButton.Parent = dockContainer
+            youtubeButton.Parent = dockContainer [cite: 24, 25]
 
             local youtubeCorner = Instance.new("UICorner")
             youtubeCorner.CornerRadius = UDim.new(0, 12)
@@ -250,46 +219,28 @@ function Loader.Load(settings)
             youtubeStroke.Color = Color3.fromRGB(255, 0, 0)
             youtubeStroke.Thickness = 2
             youtubeStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-            youtubeStroke.Parent = youtubeButton
-
-            -- YouTube icon text fallback
-            local youtubeText = Instance.new("TextLabel")
-            youtubeText.Size = UDim2.new(1, 0, 1, 0)
-            youtubeText.BackgroundTransparency = 1
-            youtubeText.Text = "YT"
-            youtubeText.TextColor3 = Color3.fromRGB(255, 0, 0)
-            youtubeText.TextSize = 20
-            youtubeText.Font = Enum.Font.GothamBold
-            youtubeText.Parent = youtubeButton
+            youtubeStroke.Parent = youtubeButton [cite: 25, 26]
 
             youtubeButton.MouseButton1Click:Connect(function()
-                if setclipboard then
-                    setclipboard(youtubeLink)
-                end
-            
+                if setclipboard then setclipboard(youtubeLink) end [cite: 27, 28]
                 local originalSize = youtubeButton.Size
-                TweenService:Create(youtubeButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    Size = UDim2.new(0, iconSize * 0.9, 0, iconSize * 0.9)
-                }):Play()
-            
+                TweenService:Create(youtubeButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0, iconSize * 0.9, 0, iconSize * 0.9)}):Play() [cite: 28, 29]
                 task.wait(0.1)
-                TweenService:Create(youtubeButton, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                    Size = originalSize
-                }):Play()
+                TweenService:Create(youtubeButton, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = originalSize}):Play() [cite: 29, 30]
             end)
 
             youtubeButton.MouseEnter:Connect(function()
                 TweenService:Create(youtubeButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     Size = UDim2.new(0, iconSize * 1.1, 0, iconSize * 1.1),
                     BackgroundColor3 = Color3.fromRGB(38, 38, 48)
-                }):Play()
+                }):Play() [cite: 30, 31]
             end)
 
             youtubeButton.MouseLeave:Connect(function()
                 TweenService:Create(youtubeButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     Size = UDim2.new(0, iconSize, 0, iconSize),
                     BackgroundColor3 = Color3.fromRGB(28, 28, 38)
-                }):Play()
+                }):Play() [cite: 31, 32]
             end)
         end
     end
@@ -301,7 +252,7 @@ function Loader.Load(settings)
     infoFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
     infoFrame.BorderSizePixel = 0
     infoFrame.ClipsDescendants = false
-    infoFrame.Parent = mainContainer
+    infoFrame.Parent = mainContainer [cite: 32, 33]
 
     local infoCorner = Instance.new("UICorner")
     infoCorner.CornerRadius = UDim.new(0, 20)
@@ -311,16 +262,15 @@ function Loader.Load(settings)
     infoStroke.Color = Color3.fromRGB(35, 35, 45)
     infoStroke.Thickness = 1
     infoStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    infoStroke.Parent = infoFrame
+    infoStroke.Parent = infoFrame [cite: 33]
 
-    -- Blue accent strip for info frame
     local topAccent = Instance.new("Frame")
     topAccent.Name = "TopAccent"
     topAccent.Size = UDim2.new(1, 0, 0, 2)
     topAccent.Position = UDim2.new(0, 0, 0, 0)
     topAccent.BackgroundColor3 = Color3.fromRGB(80, 120, 255)
     topAccent.BorderSizePixel = 0
-    topAccent.Parent = infoFrame
+    topAccent.Parent = infoFrame [cite: 33, 34]
 
     local accentCorner = Instance.new("UICorner")
     accentCorner.CornerRadius = UDim.new(0, 20)
@@ -332,7 +282,7 @@ function Loader.Load(settings)
         ColorSequenceKeypoint.new(0.5, Color3.fromRGB(140, 80, 255)),
         ColorSequenceKeypoint.new(1, Color3.fromRGB(80, 120, 255))
     }
-    accentGradient.Parent = topAccent
+    accentGradient.Parent = topAccent [cite: 34, 35]
 
     local loaderLabel = Instance.new("TextLabel")
     loaderLabel.Name = "LoaderLabel"
@@ -345,7 +295,7 @@ function Loader.Load(settings)
     loaderLabel.Font = Enum.Font.GothamMedium
     loaderLabel.TextXAlignment = Enum.TextXAlignment.Left
     loaderLabel.TextTransparency = 1
-    loaderLabel.Parent = infoFrame
+    loaderLabel.Parent = infoFrame [cite: 35]
 
     local divider = Instance.new("Frame")
     divider.Name = "Divider"
@@ -353,7 +303,7 @@ function Loader.Load(settings)
     divider.Position = UDim2.new(0, 20, 0, 55)
     divider.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
     divider.BorderSizePixel = 0
-    divider.Parent = infoFrame
+    divider.Parent = infoFrame [cite: 35, 36]
 
     local viewportContainer = Instance.new("Frame")
     viewportContainer.Name = "ViewportContainer"
@@ -362,7 +312,7 @@ function Loader.Load(settings)
     viewportContainer.AnchorPoint = Vector2.new(0.5, 0)
     viewportContainer.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
     viewportContainer.BorderSizePixel = 0
-    viewportContainer.Parent = infoFrame
+    viewportContainer.Parent = infoFrame [cite: 36]
 
     local containerCorner = Instance.new("UICorner")
     containerCorner.CornerRadius = UDim.new(0, 16)
@@ -372,18 +322,18 @@ function Loader.Load(settings)
     containerStroke.Color = Color3.fromRGB(50, 50, 60)
     containerStroke.Thickness = 1
     containerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    containerStroke.Parent = viewportContainer
+    containerStroke.Parent = viewportContainer [cite: 37]
 
     local viewportFrame = Instance.new("ViewportFrame")
     viewportFrame.Name = "AvatarViewport"
     viewportFrame.Size = UDim2.new(1, 0, 1, 0)
     viewportFrame.BackgroundTransparency = 1
     viewportFrame.BorderSizePixel = 0
-    viewportFrame.Parent = viewportContainer
+    viewportFrame.Parent = viewportContainer [cite: 37]
 
     local camera = Instance.new("Camera")
     camera.Parent = viewportFrame
-    viewportFrame.CurrentCamera = camera
+    viewportFrame.CurrentCamera = camera [cite: 37, 38]
 
     local worldModel = Instance.new("WorldModel")
     worldModel.Parent = viewportFrame
@@ -395,42 +345,33 @@ function Loader.Load(settings)
         task.spawn(function()
             local character = player.Character or player.CharacterAdded:Wait()
             task.wait(0.3)
-
             local humanoid = character:FindFirstChildOfClass("Humanoid")
             if not humanoid then return end
-
             local description = humanoid:GetAppliedDescription()
             if not description then return end
-
             local rig = Players:CreateHumanoidModelFromDescription(description, Enum.HumanoidRigType.R15)
-
             for _, obj in pairs(rig:GetDescendants()) do
                 if obj:IsA("Script") or obj:IsA("LocalScript") or obj:IsA("ModuleScript") then
                     obj:Destroy()
                 end
             end
-
             rig.Parent = worldModel
             rigModel = rig
-
             local hrp = rig:FindFirstChild("HumanoidRootPart")
             if hrp then
                 hrp.Anchored = true
                 local humRoot = rig:FindFirstChild("Humanoid") and rig:FindFirstChild("Humanoid").RootPart or hrp
                 camera.CFrame = CFrame.new(humRoot.Position + Vector3.new(0, 1.2, 4.5), humRoot.Position + Vector3.new(0, 1.2, 0))
-
                 rotationConnection = RunService.RenderStepped:Connect(function(dt)
                     if not rig or not rig.Parent then
-                        if rotationConnection then
-                            rotationConnection:Disconnect()
-                        end
+                        if rotationConnection then rotationConnection:Disconnect() end
                         return
                     end
                     hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(dt * 35), 0)
                 end)
             end
         end)
-    end
+    end [cite: 38, 39, 40, 41, 42, 43, 44]
 
     setupCharacter()
 
@@ -439,7 +380,7 @@ function Loader.Load(settings)
     infoContainer.Size = UDim2.new(1, -40, 0, 120)
     infoContainer.Position = UDim2.new(0, 20, 0, 320)
     infoContainer.BackgroundTransparency = 1
-    infoContainer.Parent = infoFrame
+    infoContainer.Parent = infoFrame [cite: 44]
 
     local usernameLabel = Instance.new("TextLabel")
     usernameLabel.Name = "Username"
@@ -453,7 +394,7 @@ function Loader.Load(settings)
     usernameLabel.TextXAlignment = Enum.TextXAlignment.Left
     usernameLabel.TextTransparency = 1
     usernameLabel.TextScaled = true
-    usernameLabel.Parent = infoContainer
+    usernameLabel.Parent = infoContainer [cite: 44, 45]
 
     local usernameConstraint = Instance.new("UITextSizeConstraint")
     usernameConstraint.MaxTextSize = 18
@@ -471,22 +412,17 @@ function Loader.Load(settings)
     userIdLabel.TextXAlignment = Enum.TextXAlignment.Left
     userIdLabel.TextTransparency = 1
     userIdLabel.TextScaled = true
-    userIdLabel.Parent = infoContainer
+    userIdLabel.Parent = infoContainer [cite: 45, 46]
 
     local userIdConstraint = Instance.new("UITextSizeConstraint")
     userIdConstraint.MaxTextSize = 14
     userIdConstraint.Parent = userIdLabel
 
     local executorName = "Unknown"
-    if identifyexecutor then
-        executorName = identifyexecutor()
-    elseif KRNL_LOADED then
-        executorName = "KRNL"
-    elseif syn then
-        executorName = "Synapse X"
-    elseif SENTINEL_V2 then
-        executorName = "Sentinel"
-    end
+    if identifyexecutor then executorName = identifyexecutor()
+    elseif KRNL_LOADED then executorName = "KRNL"
+    elseif syn then executorName = "Synapse X"
+    elseif SENTINEL_V2 then executorName = "Sentinel" end [cite: 46, 47]
 
     local executorLabel = Instance.new("TextLabel")
     executorLabel.Name = "Executor"
@@ -500,7 +436,7 @@ function Loader.Load(settings)
     executorLabel.TextXAlignment = Enum.TextXAlignment.Left
     executorLabel.TextTransparency = 1
     executorLabel.TextScaled = true
-    executorLabel.Parent = infoContainer
+    executorLabel.Parent = infoContainer [cite: 47, 48]
 
     local executorConstraint = Instance.new("UITextSizeConstraint")
     executorConstraint.MaxTextSize = 14
@@ -511,7 +447,7 @@ function Loader.Load(settings)
     statusContainer.Size = UDim2.new(1, -40, 0, 24)
     statusContainer.Position = UDim2.new(0, 20, 1, -44)
     statusContainer.BackgroundTransparency = 1
-    statusContainer.Parent = infoFrame
+    statusContainer.Parent = infoFrame [cite: 48]
 
     local statusIndicator = Instance.new("Frame")
     statusIndicator.Name = "StatusIndicator"
@@ -519,7 +455,7 @@ function Loader.Load(settings)
     statusIndicator.Position = UDim2.new(0, 0, 0.5, -4)
     statusIndicator.BackgroundColor3 = Color3.fromRGB(80, 255, 120)
     statusIndicator.BorderSizePixel = 0
-    statusIndicator.Parent = statusContainer
+    statusIndicator.Parent = statusContainer [cite: 49]
 
     local indicatorCorner = Instance.new("UICorner")
     indicatorCorner.CornerRadius = UDim.new(1, 0)
@@ -535,7 +471,7 @@ function Loader.Load(settings)
     statusText.Font = Enum.Font.Gotham
     statusText.TextXAlignment = Enum.TextXAlignment.Left
     statusText.TextTransparency = 1
-    statusText.Parent = statusContainer
+    statusText.Parent = statusContainer [cite: 49, 50]
 
     local loadingFrame = Instance.new("Frame")
     loadingFrame.Name = "LoadingFrame"
@@ -544,7 +480,7 @@ function Loader.Load(settings)
     loadingFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
     loadingFrame.BorderSizePixel = 0
     loadingFrame.ClipsDescendants = true
-    loadingFrame.Parent = mainContainer
+    loadingFrame.Parent = mainContainer [cite: 50]
 
     local loadingCorner = Instance.new("UICorner")
     loadingCorner.CornerRadius = UDim.new(0, 20)
@@ -554,9 +490,8 @@ function Loader.Load(settings)
     loadingStroke.Color = Color3.fromRGB(35, 35, 45)
     loadingStroke.Thickness = 1
     loadingStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    loadingStroke.Parent = loadingFrame
+    loadingStroke.Parent = loadingFrame [cite: 51]
 
-    -- Blue accent strip for loading frame
     local loadingAccent = Instance.new("Frame")
     loadingAccent.Name = "LoadingAccent"
     loadingAccent.Size = UDim2.new(1, 0, 0, 2)
@@ -564,7 +499,7 @@ function Loader.Load(settings)
     loadingAccent.BackgroundColor3 = Color3.fromRGB(80, 120, 255)
     loadingAccent.BorderSizePixel = 0
     loadingAccent.ZIndex = 3
-    loadingAccent.Parent = loadingFrame
+    loadingAccent.Parent = loadingFrame [cite: 51, 52]
 
     local loadingAccentCorner = Instance.new("UICorner")
     loadingAccentCorner.CornerRadius = UDim.new(0, 20)
@@ -576,7 +511,7 @@ function Loader.Load(settings)
         ColorSequenceKeypoint.new(0.5, Color3.fromRGB(140, 80, 255)),
         ColorSequenceKeypoint.new(1, Color3.fromRGB(80, 120, 255))
     }
-    loadingAccentGradient.Parent = loadingAccent
+    loadingAccentGradient.Parent = loadingAccent [cite: 52]
 
     local dynamicBg1 = Instance.new("Frame")
     dynamicBg1.Name = "DynamicBg1"
@@ -586,7 +521,7 @@ function Loader.Load(settings)
     dynamicBg1.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
     dynamicBg1.BorderSizePixel = 0
     dynamicBg1.ZIndex = 1
-    dynamicBg1.Parent = loadingFrame
+    dynamicBg1.Parent = loadingFrame [cite: 53]
 
     local gradient1 = Instance.new("UIGradient")
     gradient1.Rotation = 45
@@ -601,7 +536,7 @@ function Loader.Load(settings)
         NumberSequenceKeypoint.new(0.5, 0.85),
         NumberSequenceKeypoint.new(1, 0.95)
     }
-    gradient1.Parent = dynamicBg1
+    gradient1.Parent = dynamicBg1 [cite: 53, 54]
 
     local dynamicBg2 = Instance.new("Frame")
     dynamicBg2.Name = "DynamicBg2"
@@ -611,7 +546,7 @@ function Loader.Load(settings)
     dynamicBg2.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
     dynamicBg2.BorderSizePixel = 0
     dynamicBg2.ZIndex = 1
-    dynamicBg2.Parent = loadingFrame
+    dynamicBg2.Parent = loadingFrame [cite: 54, 55]
 
     local gradient2 = Instance.new("UIGradient")
     gradient2.Rotation = -30
@@ -625,14 +560,14 @@ function Loader.Load(settings)
         NumberSequenceKeypoint.new(0.5, 0.75),
         NumberSequenceKeypoint.new(1, 0.9)
     }
-    gradient2.Parent = dynamicBg2
+    gradient2.Parent = dynamicBg2 [cite: 55, 56]
 
     local contentFrame = Instance.new("Frame")
     contentFrame.Name = "ContentFrame"
     contentFrame.Size = UDim2.new(1, 0, 1, 0)
     contentFrame.BackgroundTransparency = 1
     contentFrame.ZIndex = 2
-    contentFrame.Parent = loadingFrame
+    contentFrame.Parent = loadingFrame [cite: 56]
 
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Name = "Title"
@@ -646,7 +581,7 @@ function Loader.Load(settings)
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.TextTransparency = 1
     titleLabel.TextScaled = true
-    titleLabel.Parent = contentFrame
+    titleLabel.Parent = contentFrame [cite: 56, 57]
 
     local titleConstraint = Instance.new("UITextSizeConstraint")
     titleConstraint.MaxTextSize = 38
@@ -656,7 +591,7 @@ function Loader.Load(settings)
     titleGlow.Color = Color3.fromRGB(80, 120, 255)
     titleGlow.Thickness = 0
     titleGlow.Transparency = 0.3
-    titleGlow.Parent = titleLabel
+    titleGlow.Parent = titleLabel [cite: 57, 58]
 
     local subtitleLabel = Instance.new("TextLabel")
     subtitleLabel.Name = "Subtitle"
@@ -670,11 +605,11 @@ function Loader.Load(settings)
     subtitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     subtitleLabel.TextTransparency = 1
     subtitleLabel.TextScaled = true
-    subtitleLabel.Parent = contentFrame
+    subtitleLabel.Parent = contentFrame [cite: 58]
 
     local subtitleConstraint = Instance.new("UITextSizeConstraint")
     subtitleConstraint.MaxTextSize = 15
-    subtitleConstraint.Parent = subtitleLabel
+    subtitleConstraint.Parent = subtitleLabel [cite: 59]
 
     local progressContainer = Instance.new("Frame")
     progressContainer.Name = "ProgressContainer"
@@ -682,7 +617,7 @@ function Loader.Load(settings)
     progressContainer.Position = UDim2.new(0, 30, 0, 260)
     progressContainer.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
     progressContainer.BorderSizePixel = 0
-    progressContainer.Parent = contentFrame
+    progressContainer.Parent = contentFrame [cite: 59]
 
     local progressCorner = Instance.new("UICorner")
     progressCorner.CornerRadius = UDim.new(1, 0)
@@ -693,7 +628,7 @@ function Loader.Load(settings)
     progressBar.Size = UDim2.new(0, 0, 1, 0)
     progressBar.BackgroundColor3 = Color3.fromRGB(80, 120, 255)
     progressBar.BorderSizePixel = 0
-    progressBar.Parent = progressContainer
+    progressBar.Parent = progressContainer [cite: 59, 60]
 
     local progressBarCorner = Instance.new("UICorner")
     progressBarCorner.CornerRadius = UDim.new(1, 0)
@@ -705,7 +640,7 @@ function Loader.Load(settings)
         ColorSequenceKeypoint.new(0.5, Color3.fromRGB(140, 80, 255)),
         ColorSequenceKeypoint.new(1, Color3.fromRGB(80, 120, 255))
     }
-    progressGradient.Parent = progressBar
+    progressGradient.Parent = progressBar [cite: 60, 61]
 
     local progressGlow = Instance.new("Frame")
     progressGlow.Name = "ProgressGlow"
@@ -714,7 +649,7 @@ function Loader.Load(settings)
     progressGlow.BackgroundColor3 = Color3.fromRGB(80, 120, 255)
     progressGlow.BackgroundTransparency = 0.8
     progressGlow.BorderSizePixel = 0
-    progressGlow.Parent = progressBar
+    progressGlow.Parent = progressBar [cite: 61]
 
     local glowCorner = Instance.new("UICorner")
     glowCorner.CornerRadius = UDim.new(1, 0)
@@ -726,7 +661,7 @@ function Loader.Load(settings)
         NumberSequenceKeypoint.new(0.5, 0),
         NumberSequenceKeypoint.new(1, 1)
     }
-    glowGradient.Parent = progressGlow
+    glowGradient.Parent = progressGlow [cite: 61, 62]
 
     local percentLabel = Instance.new("TextLabel")
     percentLabel.Name = "Percent"
@@ -740,7 +675,7 @@ function Loader.Load(settings)
     percentLabel.TextXAlignment = Enum.TextXAlignment.Left
     percentLabel.TextTransparency = 1
     percentLabel.TextScaled = true
-    percentLabel.Parent = contentFrame
+    percentLabel.Parent = contentFrame [cite: 62, 63]
 
     local percentConstraint = Instance.new("UITextSizeConstraint")
     percentConstraint.MaxTextSize = 22
@@ -758,7 +693,7 @@ function Loader.Load(settings)
     statusLabel.TextXAlignment = Enum.TextXAlignment.Left
     statusLabel.TextTransparency = 1
     statusLabel.TextScaled = true
-    statusLabel.Parent = contentFrame
+    statusLabel.Parent = contentFrame [cite: 63, 64]
 
     local statusConstraint = Instance.new("UITextSizeConstraint")
     statusConstraint.MaxTextSize = 13
@@ -771,7 +706,7 @@ function Loader.Load(settings)
     brandFrame.BackgroundColor3 = Color3.fromRGB(255, 120, 180)
     brandFrame.BorderSizePixel = 0
     brandFrame.ClipsDescendants = true
-    brandFrame.Parent = mainContainer
+    brandFrame.Parent = mainContainer [cite: 64]
 
     local brandCorner = Instance.new("UICorner")
     brandCorner.CornerRadius = UDim.new(0, 20)
@@ -781,9 +716,8 @@ function Loader.Load(settings)
     brandStroke.Color = Color3.fromRGB(255, 170, 210)
     brandStroke.Thickness = 1
     brandStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    brandStroke.Parent = brandFrame
+    brandStroke.Parent = brandFrame [cite: 65]
 
-    -- Blue accent strip for brand frame
     local brandAccent = Instance.new("Frame")
     brandAccent.Name = "BrandAccent"
     brandAccent.Size = UDim2.new(1, 0, 0, 2)
@@ -791,7 +725,7 @@ function Loader.Load(settings)
     brandAccent.BackgroundColor3 = Color3.fromRGB(80, 120, 255)
     brandAccent.BorderSizePixel = 0
     brandAccent.ZIndex = 3
-    brandAccent.Parent = brandFrame
+    brandAccent.Parent = brandFrame [cite: 65, 66]
 
     local brandAccentCorner = Instance.new("UICorner")
     brandAccentCorner.CornerRadius = UDim.new(0, 20)
@@ -803,7 +737,7 @@ function Loader.Load(settings)
         ColorSequenceKeypoint.new(0.5, Color3.fromRGB(140, 80, 255)),
         ColorSequenceKeypoint.new(1, Color3.fromRGB(80, 120, 255))
     }
-    brandAccentGradient.Parent = brandAccent
+    brandAccentGradient.Parent = brandAccent [cite: 66]
 
     local brandGradient = Instance.new("UIGradient")
     brandGradient.Rotation = 45
@@ -812,7 +746,7 @@ function Loader.Load(settings)
         ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 150, 200)),
         ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 120, 180))
     }
-    brandGradient.Parent = brandFrame
+    brandGradient.Parent = brandFrame [cite: 67]
 
     local logoImage = Instance.new("ImageLabel")
     logoImage.Name = "LogoImage"
@@ -823,7 +757,7 @@ function Loader.Load(settings)
     logoImage.Image = "rbxassetid://125073427434619"
     logoImage.ScaleType = Enum.ScaleType.Fit
     logoImage.ImageTransparency = 1
-    logoImage.Parent = brandFrame
+    logoImage.Parent = brandFrame [cite: 67, 68]
 
     local brandText = Instance.new("TextLabel")
     brandText.Name = "BrandText"
@@ -838,7 +772,7 @@ function Loader.Load(settings)
     brandText.TextYAlignment = Enum.TextYAlignment.Center
     brandText.TextTransparency = 1
     brandText.TextScaled = true
-    brandText.Parent = brandFrame
+    brandText.Parent = brandFrame [cite: 68, 69]
 
     local brandTextConstraint = Instance.new("UITextSizeConstraint")
     brandTextConstraint.MaxTextSize = 16
@@ -848,35 +782,29 @@ function Loader.Load(settings)
     brandTextStroke.Color = Color3.fromRGB(220, 80, 150)
     brandTextStroke.Thickness = 2
     brandTextStroke.Transparency = 1
-    brandTextStroke.Parent = brandText
+    brandTextStroke.Parent = brandText [cite: 69]
 
     -- SYNCHRONIZED ENTRANCE ANIMATIONS
     mainContainer.Position = UDim2.new(0.5, 0, 0.5, 50)
     mainContainer.Size = UDim2.new(0, MAIN_CONTAINER_WIDTH, 0, 0)
-
-    -- Same timing and easing for both
     local entranceTweenInfo = TweenInfo.new(0.8, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
     
     local mainEntranceTween = TweenService:Create(mainContainer, entranceTweenInfo, {
         Size = UDim2.new(0, MAIN_CONTAINER_WIDTH, 0, MAIN_CONTAINER_HEIGHT),
         Position = UDim2.new(0.5, 0, 0.5, 0)
     })
-    
-    mainEntranceTween:Play()
+    mainEntranceTween:Play() [cite: 69, 70]
 
     if dockContainer then
         local dockEnterGoal = {
             Size = UDim2.new(0, dockWidth, 0, DOCK_HEIGHT),
             Position = UDim2.new(0.5, 0, 0.5, -(MAIN_CONTAINER_HEIGHT/2 + DOCK_HEIGHT/2 + DOCK_OFFSET))
         }
-        
-        -- Same timing as main container
         local dockTween = TweenService:Create(dockContainer, entranceTweenInfo, dockEnterGoal)
-        dockTween:Play()
+        dockTween:Play() [cite: 70, 71]
     end
 
     task.wait(0.3)
-
     local fadeElements = {
         loaderLabel, usernameLabel, userIdLabel, executorLabel, statusText,
         titleLabel, subtitleLabel, percentLabel, statusLabel, logoImage, brandText
@@ -894,63 +822,46 @@ function Loader.Load(settings)
                 TweenService:Create(element, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageTransparency = 0}):Play()
             end
         end)
-    end
+    end [cite: 71, 72, 73, 74]
 
     task.wait(0.3)
     TweenService:Create(titleGlow, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Thickness = 2}):Play()
 
-    local pulseConnection
-    pulseConnection = RunService.RenderStepped:Connect(function()
+    local pulseConnection = RunService.RenderStepped:Connect(function()
         local pulse = (math.sin(tick() * 4) + 1) / 2
-        statusIndicator.BackgroundColor3 = Color3.fromRGB(
-            60 + pulse * 40,
-            200 + pulse * 55,
-            100 + pulse * 40
-        )
-    end)
+        statusIndicator.BackgroundColor3 = Color3.fromRGB(60 + pulse * 40, 200 + pulse * 55, 100 + pulse * 40)
+    end) [cite: 74, 75]
 
-    local gradientRotation = 0
+    local accentGradientRotation = 0
     local gradient1Rotation = 0
     local gradient2Rotation = 0
-    local dockGradientRotation = 0
-    local accentGradientRotation = 0
-    local gradientConnection
-    gradientConnection = RunService.RenderStepped:Connect(function(dt)
-        -- Rotate all the accent gradients together
+    local gradientConnection = RunService.RenderStepped:Connect(function(dt)
         accentGradientRotation = accentGradientRotation + (dt * 30)
         accentGradient.Rotation = accentGradientRotation
         progressGradient.Rotation = accentGradientRotation
         loadingAccentGradient.Rotation = accentGradientRotation
         brandAccentGradient.Rotation = accentGradientRotation
-
         if dockContainer then
             for _, child in pairs(dockContainer:GetChildren()) do
                 if child.Name == "DockAccent" then
                     for _, gradient in pairs(child:GetChildren()) do
-                        if gradient:IsA("UIGradient") then
-                            gradient.Rotation = accentGradientRotation
-                        end
+                        if gradient:IsA("UIGradient") then gradient.Rotation = accentGradientRotation end
                     end
                 end
             end
         end
-
         gradient1Rotation = gradient1Rotation + (dt * 20)
         gradient1.Rotation = gradient1Rotation
-        
         gradient2Rotation = gradient2Rotation - (dt * 15)
         gradient2.Rotation = gradient2Rotation
-
         local offsetX = math.sin(tick() * 0.4) * 0.1
         local offsetY = math.cos(tick() * 0.3) * 0.1
         dynamicBg1.Position = UDim2.new(-0.25 + offsetX, 0, -0.25 + offsetY, 0)
-        
         local offset2X = math.cos(tick() * 0.5) * 0.15
         local offset2Y = math.sin(tick() * 0.6) * 0.12
         dynamicBg2.Position = UDim2.new(-0.25 + offset2X, 0, -0.25 + offset2Y, 0)
-
         brandGradient.Rotation = brandGradient.Rotation + (dt * 25)
-    end)
+    end) [cite: 75, 76, 77, 78, 79, 80]
 
     local loadingSteps = {
         {progress = 15, duration = 1.0, status = "Connecting to services...", subtitle = "Establishing connection..."},
@@ -960,14 +871,13 @@ function Loader.Load(settings)
         {progress = 78, duration = 1.4, status = "Configuring settings...", subtitle = "Applying preferences..."},
         {progress = 92, duration = 1.2, status = "Finalizing setup...", subtitle = "Almost ready..."},
         {progress = 100, duration = 0.8, status = "Complete!", subtitle = "Welcome to LumaHub"}
-    }
+    } [cite: 80, 81]
 
     local function updateProgress(newProgress, duration)
         local tweenInfo = TweenInfo.new(duration * 0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
         local goal = {Size = UDim2.new(newProgress / 100, 0, 1, 0)}
         local progressTween = TweenService:Create(progressBar, tweenInfo, goal)
         progressTween:Play()
-        
         local currentProgress = 0
         local startTime = tick()
         local progressUpdateConnection
@@ -976,94 +886,63 @@ function Loader.Load(settings)
             local alpha = math.min(elapsed / (duration * 0.8), 1)
             currentProgress = math.floor(currentProgress + (newProgress - currentProgress) * alpha)
             percentLabel.Text = currentProgress .. "%"
-            
             if alpha >= 1 then
                 percentLabel.Text = newProgress .. "%"
                 progressUpdateConnection:Disconnect()
             end
         end)
-        
         return progressTween
-    end
+    end [cite: 81, 82, 83, 84]
 
     local function animateLoading()
         task.wait(1.0)
-
         for i, step in ipairs(loadingSteps) do
             local stepDuration = step.duration
             local postTweenWait = stepDuration * 0.2
-
             local fadeOutInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
             TweenService:Create(statusLabel, fadeOutInfo, {TextTransparency = 1}):Play()
             TweenService:Create(subtitleLabel, fadeOutInfo, {TextTransparency = 1}):Play()
-
             task.wait(0.2)
-
             statusLabel.Text = step.status
             subtitleLabel.Text = step.subtitle
-
-            local fadeInInfo = TweenService:Create(statusLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0})
-            fadeInInfo:Play()
+            TweenService:Create(statusLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
             TweenService:Create(subtitleLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
-
             local progressTween = updateProgress(step.progress, stepDuration)
             progressTween.Completed:Wait()
-
-            task.wait(postTweenWait)
+            task.wait(postTweenWait) [cite: 85, 86, 87]
 
             if step.progress == 100 then
                 task.wait(0.8)
-
                 if pulseConnection then pulseConnection:Disconnect() end
                 if gradientConnection then gradientConnection:Disconnect() end
                 if rotationConnection then rotationConnection:Disconnect() end
-
                 local fadeOutInfoFinal = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-
                 TweenService:Create(fullBg, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
-                
                 for _, line in pairs(gridContainer:GetChildren()) do
-                    if line:IsA("Frame") then
-                        TweenService:Create(line, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
-                    end
+                    if line:IsA("Frame") then TweenService:Create(line, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play() end
                 end
-
                 if rigModel then
                     for _, part in pairs(rigModel:GetDescendants()) do
-                        if part:IsA("BasePart") or part:IsA("Decal") then
-                            TweenService:Create(part, fadeOutInfoFinal, {Transparency = 1}):Play()
-                        end
+                        if part:IsA("BasePart") or part:IsA("Decal") then TweenService:Create(part, fadeOutInfoFinal, {Transparency = 1}):Play() end
                     end
                 end
-
                 local allChildren = mainContainer:GetDescendants()
                 if dockContainer then
-                    local dockChildren = dockContainer:GetDescendants()
-                    for _, child in pairs(dockChildren) do
-                        table.insert(allChildren, child)
-                    end
+                    for _, child in pairs(dockContainer:GetDescendants()) do table.insert(allChildren, child) end
                 end
-
                 for _, obj in pairs(allChildren) do
-                    if obj:IsA("TextLabel") or obj:IsA("TextButton") then
-                        TweenService:Create(obj, fadeOutInfoFinal, {TextTransparency = 1}):Play()
-                    elseif obj:IsA("ImageLabel") or obj:IsA("ImageButton") then
-                        TweenService:Create(obj, fadeOutInfoFinal, {ImageTransparency = 1}):Play()
-                    elseif obj:IsA("Frame") and obj ~= fullBg and obj.Parent ~= screenGui and not obj:IsDescendantOf(dockContainer) then 
-                        TweenService:Create(obj, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
-                    elseif obj:IsA("UIStroke") then
-                        TweenService:Create(obj, fadeOutInfoFinal, {Transparency = 1}):Play()
-                    end
-                end
+                    if obj:IsA("TextLabel") or obj:IsA("TextButton") then TweenService:Create(obj, fadeOutInfoFinal, {TextTransparency = 1}):Play()
+                    elseif obj:IsA("ImageLabel") or obj:IsA("ImageButton") then TweenService:Create(obj, fadeOutInfoFinal, {ImageTransparency = 1}):Play()
+                    elseif obj:IsA("Frame") and obj ~= fullBg and obj.Parent ~= screenGui and not obj:IsDescendantOf(dockContainer) then TweenService:Create(obj, fadeOutInfoFinal, {BackgroundTransparency = 1}):Play()
+                    elseif obj:IsA("UIStroke") then TweenService:Create(obj, fadeOutInfoFinal, {Transparency = 1}):Play() end
+                end [cite: 87, 88, 89, 90, 91, 92, 93, 94, 95]
 
                 -- SYNCHRONIZED EXIT ANIMATIONS
                 local exitTweenInfo = TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.In)
-                
                 local collapseTween = TweenService:Create(mainContainer, exitTweenInfo, {
                     Size = UDim2.new(0, MAIN_CONTAINER_WIDTH, 0, 0),
                     Position = UDim2.new(0.5, 0, 0.5, 50)
                 })
-
                 if dockContainer then
                     local dockExitGoal = {
                         Size = UDim2.new(0, 0, 0, 0),
@@ -1071,24 +950,16 @@ function Loader.Load(settings)
                     }
                     TweenService:Create(dockContainer, exitTweenInfo, dockExitGoal):Play()
                 end
-
                 local blurOut = TweenService:Create(blur, fadeOutInfoFinal, {Size = 0})
-
                 collapseTween:Play()
                 blurOut:Play()
-
                 collapseTween.Completed:Wait()
-
-                if blur.Parent then
-                    blur:Destroy()
-                end
-
+                if blur.Parent then blur:Destroy() end
                 screenGui:Destroy()
-
                 break
             end
         end
-    end
+    end [cite: 95, 96, 97, 98, 99, 100]
 
     task.spawn(animateLoading)
 end
